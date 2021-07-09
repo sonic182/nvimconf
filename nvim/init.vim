@@ -6,34 +6,29 @@ call plug#begin('~/.vim/plugged')
 Plug 'edkolev/promptline.vim'
 Plug 'bling/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-" Plug 'scrooloose/nerdtree'
-" Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
 " Tools
 Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-fugitive'
 Plug 'metakirby5/codi.vim'
-" Plug 'shougo/neocomplete.vim'
-Plug 'slashmili/alchemist.vim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" Plug 'rust-lang/rust.vim'
 Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 
 " Syntax
-Plug 'elixir-editors/vim-elixir'
-" Plug 'neoclide/coc.nvim', {'branch': 'release'}
-" Plug 'dylon/vim-antlr'
+" Plug 'rust-lang/rust.vim'
+" Plug 'slashmili/alchemist.vim'
+" Plug 'elixir-editors/vim-elixir'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-lua/completion-nvim'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
+Plug 'nvim-treesitter/completion-treesitter'
 
 " Awesome test plugin
 Plug 'janko-m/vim-test'
-" this shit is needed?
-" Plug 'christoomey/vim-tmux-navigator'
 
 " Initialize plugin system
 call plug#end()
@@ -45,18 +40,17 @@ call plug#end()
 " python identation
 set expandtab ts=2 sw=2 ai " identation ok for python
 :autocmd Filetype python set expandtab ts=4 sw=4 ai " identation ok for python
-:autocmd Filetype html set expandtab ts=2 sw=2 ai " identation ok for python
-:autocmd Filetype javascript set expandtab ts=2 sw=2 ai " identation ok for python
-:autocmd Filetype ruby set softtabstop=2 ts=2 sw=2 " ruby identation
+:autocmd Filetype html set expandtab ts=2 sw=2 ai
+:autocmd Filetype javascript set expandtab ts=2 sw=2 ai
+:autocmd Filetype ruby set softtabstop=2 ts=2 sw=2
 
-" Check Python files with flake8 and pylint.
-" Fix Python files with autopep8 and yapf.
 
+" allow mouse usage, sometimes it's ok
 set mouse=a
+" use same clipboard as system, to paste from it, or yank into it
 set clipboard+=unnamedplus
-
+" try to reload buffer if the file has changed outside neovim
 set autoread
-
 au FocusGained * :checktime
 
 " theming
@@ -66,31 +60,37 @@ autocmd VimEnter * AirlineTheme dark
 autocmd VimEnter * highlight Pmenu ctermbg=LightGray guibg=#888888 guifg=#222222
 autocmd VimEnter * highlight CocErrorSign guifg=#f1f1f1
 
-" let g:ctrlp_map = '<c-p>' " for searching
-" let g:ctrlp_cmd = 'CtrlP'
 
-" nnoremap <C-p> :FuzzyOpen<CR>
+""""""""""""
+" Mappings!!
+""""""""""""
+
 nnoremap <C-p> :FZF<CR>
 
-""" NERD tree
-" map <silent> <C-m> :NERDTreeToggle<CR>
-map <silent> <S-t> :new term://zsh -l<CR>
-map <silent> <S-y> :vnew term://zsh -l<CR>
+" Custom maps for opening a terminal inside vim, horizontal or terminal
+noremap <silent> <S-t> :new term://zsh -l<CR>i
+noremap <silent> <S-y> :vnew term://zsh -l<CR>i
 
 """ mapping vim-test 
 " make test commands execute using dispatch.vim
 let test#strategy = "neovim"
-" nmap <silent> <C-T> :TestNearest<CR>
-nmap <silent> <C-F> :TestFile<CR>
-" nmap <silent> <C-a> :TestSuite<CR>
-" nmap <silent> <C-l> :TestLast<CR>
-" nmap <silent> <C-g> :TestVisit<CR>
+nnoremap <silent> <C-T> :TestNearest<CR>
+nnoremap <silent> <C-F> :TestFile<CR>
+" nnoremap <silent> <C-a> :TestSuite<CR>
+" nnoremap <silent> <C-l> :TestLast<CR>
+" nnoremap <silent> <C-g> :TestVisit<CR>
 """"
 
-" Escape when in :terminal
+" map no recursive when in terminal mode, to go to Normal mode pressing <Esc>
 :tnoremap <Esc> <C-\><C-n>
 
+""""""""""""""""
+" General stuffs
+""""""""""""""""
+
 autocmd CompleteDone * pclose!
+
+command Autopep8 :!autopep8 -i %
 
 let g:promptline_symbols = {
     \ 'left'       : '',
@@ -106,21 +106,45 @@ let g:codi#interpreters = {
                        \ 'prompt': '^\(>>>\|\.\.\.\) ',
                        \ },
                    \ }
-" set guicursor=
 
-" let g:colorizer_auto_color = 1
-" let g:netrw_usetab = 1
 
-" command MakeTags :!rg --files . | ctags -L -
-command Autopep8 :!autopep8 -i %
-
+" better colors for terminals like kitty or alacritty
 if (has("termguicolors"))
   let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
   let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   set termguicolors
 endif
-let g:VM_default_mappings = 0
 
+
+" Configure the completion chains
+" let g:completion_chain_complete_list = {
+" 			\'default' : {
+" 			\	'default' : [
+" 			\		{'complete_items' : ['lsp', 'snippet']},
+" 			\		{'mode' : 'file'}
+" 			\	],
+" 			\	'comment' : [],
+" 			\	'string' : []
+" 			\	},
+" 			\'vim' : [
+" 			\	{'complete_items': ['snippet']},
+" 			\	{'mode' : 'cmd'}
+" 			\	],
+" 			\'c' : [
+" 			\	{'complete_items': ['ts']}
+" 			\	],
+" 			\'python' : [
+" 			\	{'complete_items': ['ts']}
+" 			\	],
+" 			\'ruby' : [
+" 			\	{'complete_items': ['ts']}
+" 			\	],
+" 			\'lua' : [
+" 			\	{'complete_items': ['ts']}
+" 			\	],
+" 			\}
+
+" Lua script for config
 lua << EOF
 local nvim_lsp = require('lspconfig')
 local completion_on_attach=require'completion'.on_attach
@@ -161,7 +185,8 @@ end
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
-local servers = { "pyright", "rust_analyzer", "tsserver" }
+-- solargraph for ruby. if any of these servers is not installed, it does nothing, no slowdown to neovim, etc.
+local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph"}
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup {
     on_attach = on_attach,
@@ -170,13 +195,32 @@ for _, lsp in ipairs(servers) do
     }
   }
 end
+
+-- Treesitter, one plugin to highlight anything
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  highlight = {
+    enable = true,              -- false will disable the whole extension
+  },
+  incremental_selection = {
+    enable = true,
+    -- keymaps = {
+    --   init_selection = "gnn",
+    --   node_incremental = "grn",
+    --   scope_incremental = "grc",
+    --   node_decremental = "grm",
+    -- },
+  },
+}
 EOF
 
-" Use <Tab> and <S-Tab> to navigate through popup menu
+" Use <Tab> and Shift-Tab to navigate through popup menu
+" As we ussualy use for editors like vscode, jetbrains editors, etc.
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
-" Set completeopt to have a better completion experience
+" Set completeopt to have a better completion experience, to avoid violent
+" autocomplete
 set completeopt=menuone,noinsert,noselect
 
 " Avoid showing message extra message when using completion
