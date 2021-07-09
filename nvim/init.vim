@@ -6,7 +6,8 @@ call plug#begin('~/.vim/plugged')
 Plug 'edkolev/promptline.vim'
 Plug 'bling/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
+" Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
+Plug 'lilydjwg/colorizer'
 " Tools
 Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
@@ -16,7 +17,6 @@ Plug 'tpope/vim-surround'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 
 " Syntax
 " Plug 'rust-lang/rust.vim'
@@ -27,6 +27,9 @@ Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 Plug 'nvim-treesitter/completion-treesitter'
 
+" Editing
+Plug 'terryma/vim-multiple-cursors'
+" Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 " Awesome test plugin
 Plug 'janko-m/vim-test'
 
@@ -52,6 +55,8 @@ set clipboard+=unnamedplus
 " try to reload buffer if the file has changed outside neovim
 set autoread
 au FocusGained * :checktime
+
+autocmd CompleteDone * pclose!
 
 " theming
 autocmd VimEnter * AirlineTheme dark
@@ -186,14 +191,24 @@ end
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
 -- solargraph for ruby. if any of these servers is not installed, it does nothing, no slowdown to neovim, etc.
-local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph"}
+local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph", "elixirls" }
 for _, lsp in ipairs(servers) do
-  nvim_lsp[lsp].setup {
-    on_attach = on_attach,
-    flags = {
-      debounce_text_changes = 150,
+  if lsp == "elixirls" then
+    nvim_lsp[lsp].setup {
+      on_attach = on_attach,
+      cmd = { "/opt/johanderson/elixir-ls/language_server.sh" };
+      flags = {
+        debounce_text_changes = 150,
+      }
     }
-  }
+  else
+    nvim_lsp[lsp].setup {
+      on_attach = on_attach,
+      flags = {
+        debounce_text_changes = 150,
+      }
+    }
+  end
 end
 
 -- Treesitter, one plugin to highlight anything
@@ -218,6 +233,8 @@ EOF
 " As we ussualy use for editors like vscode, jetbrains editors, etc.
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+let g:completion_trigger_keyword_length = 1 " default = 1
 
 " Set completeopt to have a better completion experience, to avoid violent
 " autocomplete
