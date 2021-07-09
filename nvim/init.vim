@@ -121,34 +121,6 @@ if (has("termguicolors"))
 endif
 
 
-" Configure the completion chains
-" let g:completion_chain_complete_list = {
-" 			\'default' : {
-" 			\	'default' : [
-" 			\		{'complete_items' : ['lsp', 'snippet']},
-" 			\		{'mode' : 'file'}
-" 			\	],
-" 			\	'comment' : [],
-" 			\	'string' : []
-" 			\	},
-" 			\'vim' : [
-" 			\	{'complete_items': ['snippet']},
-" 			\	{'mode' : 'cmd'}
-" 			\	],
-" 			\'c' : [
-" 			\	{'complete_items': ['ts']}
-" 			\	],
-" 			\'python' : [
-" 			\	{'complete_items': ['ts']}
-" 			\	],
-" 			\'ruby' : [
-" 			\	{'complete_items': ['ts']}
-" 			\	],
-" 			\'lua' : [
-" 			\	{'complete_items': ['ts']}
-" 			\	],
-" 			\}
-
 " Lua script for config
 lua << EOF
 local nvim_lsp = require('lspconfig')
@@ -216,15 +188,6 @@ require'nvim-treesitter.configs'.setup {
   ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
   highlight = {
     enable = true,              -- false will disable the whole extension
-  },
-  incremental_selection = {
-    enable = true,
-    -- keymaps = {
-    --   init_selection = "gnn",
-    --   node_incremental = "grn",
-    --   scope_incremental = "grc",
-    --   node_decremental = "grm",
-    -- },
   },
 }
 EOF
