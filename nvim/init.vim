@@ -4,7 +4,7 @@
 call plug#begin('~/.vim/plugged')
 " Styling
 Plug 'edkolev/promptline.vim'
-Plug 'bling/vim-airline'
+Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 " Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
 Plug 'lilydjwg/colorizer'
@@ -58,10 +58,11 @@ au FocusGained * :checktime
 
 autocmd CompleteDone * pclose!
 
-" theming
+" " theming
+let g:airline_powerline_fonts=1
 autocmd VimEnter * AirlineTheme dark
-" autocmd VimEnter * AirlineTheme solarized
-" let g:airline_solarized_bg='dark'
+" " autocmd VimEnter * AirlineTheme solarized
+" " let g:airline_solarized_bg='dark'
 autocmd VimEnter * highlight Pmenu ctermbg=LightGray guibg=#888888 guifg=#222222
 autocmd VimEnter * highlight CocErrorSign guifg=#f1f1f1
 
