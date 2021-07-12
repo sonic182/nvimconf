@@ -4,8 +4,6 @@
 call plug#begin('~/.vim/plugged')
 " Styling
 Plug 'kyazdani42/nvim-web-devicons' " Recommended (for coloured icons)
-" Plug 'ryanoasis/vim-devicons' Icons without colours
-Plug 'akinsho/nvim-bufferline.lua'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 " Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
@@ -193,9 +191,6 @@ require'nvim-treesitter.configs'.setup {
     enable = true,              -- false will disable the whole extension
   },
 }
-
--- bufferline
-require("bufferline").setup{}
 EOF
 
 " Use <Tab> and Shift-Tab to navigate through popup menu
