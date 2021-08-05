@@ -19,9 +19,6 @@ Plug 'junegunn/fzf.vim'
 
 
 " Syntax
-" Plug 'rust-lang/rust.vim'
-" Plug 'slashmili/alchemist.vim'
-" Plug 'elixir-editors/vim-elixir'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
@@ -29,7 +26,6 @@ Plug 'nvim-treesitter/completion-treesitter'
 
 " Editing
 Plug 'terryma/vim-multiple-cursors'
-" Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 " Awesome test plugin
 Plug 'janko-m/vim-test'
 
@@ -71,7 +67,7 @@ autocmd VimEnter * highlight CocErrorSign guifg=#f1f1f1
 " Mappings!!
 """"""""""""
 
-nnoremap <C-p> :FZF<CR>
+nnoremap <C-p> :Files<CR>
 
 " Custom maps for opening a terminal inside vim, horizontal or terminal
 noremap <silent> <S-t> :new term://zsh -l<CR>i
@@ -95,8 +91,30 @@ nnoremap <silent> <C-F> :TestFile<CR>
 """"""""""""""""
 
 autocmd CompleteDone * pclose!
-
 command Autopep8 :!autopep8 -i %
+
+
+function! s:OnEvent(job_id, data, event) dict
+  if a:event == 'stdout'
+    let str = self.shell.' stdout: '.join(a:data)
+  elseif a:event == 'stderr'
+    let str = self.shell.' stderr: '.join(a:data)
+  else
+    let str = self.shell.' exited'
+  endif
+
+  " echom str
+  echom printf('%s: %s',a:event,string(a:data))
+endfunction
+let s:callbacks = {
+\ 'on_stdout': function('s:OnEvent'),
+\ 'on_stderr': function('s:OnEvent'),
+\ 'on_exit': function('s:OnEvent')
+\ }
+
+command MakeElixirTags :call jobstart(['bash', '-c', 'rg --files | grep .ex* | xargs ctags'], extend({'shell': 'shell 1'}, s:callbacks))
+command MakePythonTags :call jobstart(['bash', '-c', 'rg --files | grep .py | xargs ctags'], extend({'shell': 'shell 1'}, s:callbacks))
+
 
 let g:promptline_symbols = {
     \ 'left'       : '',
@@ -120,7 +138,6 @@ if (has("termguicolors"))
   let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   set termguicolors
 endif
-
 
 " Lua script for config
 lua << EOF
@@ -198,7 +215,7 @@ EOF
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
-let g:completion_trigger_keyword_length = 1 " default = 1
+
 
 " Set completeopt to have a better completion experience, to avoid violent
 " autocomplete
