@@ -23,9 +23,20 @@ Plug 'folke/which-key.nvim'
 
 " Syntax
 Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
-Plug 'nvim-treesitter/completion-treesitter'
+
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-path'
+Plug 'hrsh7th/cmp-cmdline'
+Plug 'hrsh7th/nvim-cmp'
+
+" For vsnip users.
+Plug 'hrsh7th/cmp-vsnip'
+Plug 'hrsh7th/vim-vsnip'
+
+Plug 'elixir-editors/vim-elixir'
+Plug 'pest-parser/pest.vim'
 
 " Editing
 Plug 'terryma/vim-multiple-cursors'
@@ -149,8 +160,70 @@ endif
 " Lua script for config
 lua << EOF
 local nvim_lsp = require('lspconfig')
-local completion_on_attach=require'completion'.on_attach
 
+-- COMPLETION
+local cmp = require('cmp')
+
+cmp.setup({
+  snippet = {
+    -- REQUIRED - you must specify a snippet engine
+    expand = function(args)
+      vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+      -- require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+      -- require('snippy').expand_snippet(args.body) -- For `snippy` users.
+      -- vim.fn["UltiSnips#Anon"](args.body) -- For `ultisnips` users.
+    end,
+  },
+  mapping = {
+    ['<C-b>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
+    ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
+    ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
+    ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
+    ['<C-e>'] = cmp.mapping({
+      i = cmp.mapping.abort(),
+      c = cmp.mapping.close(),
+    }),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+  },
+  sources = cmp.config.sources({
+    { name = 'nvim_lsp' },
+    { name = 'vsnip' }, -- For vsnip users.
+    -- { name = 'luasnip' }, -- For luasnip users.
+    -- { name = 'ultisnips' }, -- For ultisnips users.
+    -- { name = 'snippy' }, -- For snippy users.
+  }, {
+    { name = 'buffer' },
+  })
+})
+
+-- Set configuration for specific filetype.
+-- cmp.setup.filetype('gitcommit', {
+--   sources = cmp.config.sources({
+--     { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it. 
+--   }, {
+--     { name = 'buffer' },
+--   })
+-- })
+-- 
+-- -- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
+-- cmp.setup.cmdline('/', {
+--   sources = {
+--     { name = 'buffer' }
+--   }
+-- })
+-- 
+-- -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+-- cmp.setup.cmdline(':', {
+--   sources = cmp.config.sources({
+--     { name = 'path' }
+--   }, {
+--     { name = 'cmdline' }
+--   })
+-- })
+
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
+-- local completion_on_attach=require'completion'.on_attach
 
 -- Mappings.
 local opts = { noremap=true, silent=true }
@@ -163,12 +236,12 @@ vim.api.nvim_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>'
 -- Use an on_attach function to only map the following keys
 -- after the language server attaches to the current buffer
 local on_attach = function(client, bufnr)
-  completion_on_attach(client, bufnr)
+  -- completion_on_attach(client, bufnr)
   local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
   local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
 
   --Enable completion triggered by <c-x><c-o>
-  -- buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+  -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
   -- Mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
@@ -195,6 +268,7 @@ for _, lsp in ipairs(servers) do
   if lsp == "elixirls" then
     nvim_lsp[lsp].setup {
       on_attach = on_attach,
+      capabilities = capabilities,
       cmd = { "/opt/johanderson/elixir-ls/language_server.sh" };
       flags = {
         debounce_text_changes = 150,
@@ -203,6 +277,7 @@ for _, lsp in ipairs(servers) do
   else
     nvim_lsp[lsp].setup {
       on_attach = on_attach,
+      capabilities = capabilities,
       flags = {
         debounce_text_changes = 150,
       }
@@ -255,11 +330,7 @@ require'nvim-treesitter.configs'.setup {
 }
 
 -- which key
-require("which-key").setup {
-  -- your configuration comes here
-  -- or leave it empty to use the default settings
-  -- refer to the configuration section below
-}
+require("which-key").setup {}
 EOF
 
 " Use <Tab> and Shift-Tab to navigate through popup menu
