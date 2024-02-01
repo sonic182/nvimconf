@@ -3,18 +3,19 @@
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.vim/plugged')
 " Styling
-Plug 'kyazdani42/nvim-web-devicons' " Recommended (for coloured icons)
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'kyazdani42/nvim-web-devicons'
+" Plug 'lewis6991/gitsigns.nvim' " OPTIONAL: for git status
+Plug 'nvim-tree/nvim-web-devicons' " OPTIONAL: for file icons
 Plug 'romgrk/barbar.nvim'
-" Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' }
-Plug 'lilydjwg/colorizer'
+
+" Plug 'lilydjwg/colorizer'
+
 " Tools
 Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-fugitive'
-Plug 'metakirby5/codi.vim'
+" Plug 'metakirby5/codi.vim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -32,7 +33,8 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 
-Plug 'L3MON4D3/LuaSnip', {'tag': 'v<CurrentMajor>.*'}
+" Plug 'L3MON4D3/LuaSnip', {'tag': 'v<CurrentMajor>.*'}
+Plug 'L3MON4D3/LuaSnip'
 Plug 'saadparwaiz1/cmp_luasnip'
 
 " Editing
@@ -154,8 +156,11 @@ if (has("termguicolors"))
   set termguicolors
 endif
 
+let g:barbar_auto_setup = v:false " disable auto-setup
+
 " Lua script for config
 lua << EOF
+require'barbar'.setup {…}
 local nvim_lsp = require('lspconfig')
 
 -- auto complete
@@ -183,8 +188,8 @@ cmp.setup({
   }),
   sources = cmp.config.sources({
     { name = 'nvim_lsp' },
-    { name = 'vsnip' }, -- For vsnip users.
-    -- { name = 'luasnip' }, -- For luasnip users.
+    -- { name = 'vsnip' }, -- For vsnip users.
+    { name = 'luasnip' }, -- For luasnip users.
     -- { name = 'ultisnips' }, -- For ultisnips users.
     -- { name = 'snippy' }, -- For snippy users.
   }, {
@@ -254,41 +259,41 @@ for _, lsp in ipairs(servers) do
   end
 end
 
-nvim_lsp.diagnosticls.setup {
-  filetypes = { "python" },
-  init_options = {
-    filetypes = {
-      python = {"flake8"},
-    },
-    linters = {
-      flake8 = {
-        debounce = 100,
-        sourceName = "flake8",
-        command = "flake8",
-        args = {
-          "--format",
-          "%(row)d:%(col)d:%(code)s:%(code)s: %(text)s",
-          "%file",
-        },
-        formatPattern = {
-          "^(\\d+):(\\d+):(\\w+):(\\w).+: (.*)$",
-          {
-              line = 1,
-              column = 2,
-              message = {"[", 3, "] ", 5},
-              security = 4
-          }
-        },
-        securities = {
-          E = "error",
-          W = "warning",
-          F = "info",
-          B = "hint",
-        },
-      },
-    },
-  }
-}
+-- nvim_lsp.diagnosticls.setup {
+--   filetypes = { "python" },
+--   init_options = {
+--     filetypes = {
+--       python = {"flake8"},
+--     },
+--     linters = {
+--       flake8 = {
+--         debounce = 100,
+--         sourceName = "flake8",
+--         command = "flake8",
+--         args = {
+--           "--format",
+--           "%(row)d:%(col)d:%(code)s:%(code)s: %(text)s",
+--           "%file",
+--         },
+--         formatPattern = {
+--           "^(\\d+):(\\d+):(\\w+):(\\w).+: (.*)$",
+--           {
+--               line = 1,
+--               column = 2,
+--               message = {"[", 3, "] ", 5},
+--               security = 4
+--           }
+--         },
+--         securities = {
+--           E = "error",
+--           W = "warning",
+--           F = "info",
+--           B = "hint",
+--         },
+--       },
+--     },
+--   }
+-- }
 
 -- Treesitter, one plugin to highlight anything
 require'nvim-treesitter.configs'.setup {
