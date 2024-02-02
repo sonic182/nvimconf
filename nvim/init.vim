@@ -15,7 +15,6 @@ Plug 'romgrk/barbar.nvim'
 Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-fugitive'
-" Plug 'metakirby5/codi.vim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -33,7 +32,6 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 
-" Plug 'L3MON4D3/LuaSnip', {'tag': 'v<CurrentMajor>.*'}
 Plug 'L3MON4D3/LuaSnip'
 Plug 'saadparwaiz1/cmp_luasnip'
 
@@ -87,8 +85,8 @@ autocmd VimEnter * highlight CocErrorSign guifg=#f1f1f1
 nnoremap <C-p> :Files<CR>
 
 " Custom maps for opening a terminal inside vim, horizontal or terminal
-noremap <silent> <S-t> :new term://zsh -l<CR>i
-noremap <silent> <S-y> :vnew term://zsh -l<CR>i
+" noremap <silent> <S-t> :new term://zsh -l<CR>i
+" noremap <silent> <S-y> :vnew term://zsh -l<CR>i
 
 """ mapping vim-test 
 " make test commands execute using dispatch.vim
@@ -129,9 +127,6 @@ let s:callbacks = {
 \ 'on_exit': function('s:OnEvent')
 \ }
 
-command MakeElixirTags :call jobstart(['bash', '-c', 'rg --files | grep .ex* | xargs ctags'], extend({'shell': 'shell 1'}, s:callbacks))
-command MakePythonTags :call jobstart(['bash', '-c', 'rg --files | grep .py | xargs ctags'], extend({'shell': 'shell 1'}, s:callbacks))
-
 
 let g:promptline_symbols = {
     \ 'left'       : '',
@@ -140,13 +135,6 @@ let g:promptline_symbols = {
     \ 'truncation' : '...',
     \ 'vcs_branch' : '',
     \ 'space'      : ' '}
-
-let g:codi#interpreters = {
-                   \ 'python': {
-                       \ 'bin': 'python3',
-                       \ 'prompt': '^\(>>>\|\.\.\.\) ',
-                       \ },
-                   \ }
 
 
 " better colors for terminals like kitty or alacritty
@@ -330,7 +318,6 @@ snoremap <silent> <S-Tab> <cmd>lua require('luasnip').jump(-1)<Cr>
 " For changing choices in choiceNodes (not strictly necessary for a basic setup).
 imap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
 smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
-
 
 
 " Set completeopt to have a better completion experience, to avoid violent
