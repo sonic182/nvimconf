@@ -1,7 +1,7 @@
 " Specify a directory for plugins
 " - For Neovim: ~/.local/share/nvim/plugged
 " - Avoid using standard Vim directory names like 'plugin'
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.local/share/nvim/plugged')
 " Styling
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -23,7 +23,7 @@ Plug 'folke/which-key.nvim'
 
 " Syntax
 Plug 'neovim/nvim-lspconfig'
-Plug 'elixir-lang/vim-elixir'
+" Plug 'elixir-lang/vim-elixir'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
 Plug 'hrsh7th/cmp-nvim-lsp'
@@ -63,8 +63,6 @@ set clipboard+=unnamedplus
 " try to reload buffer if the file has changed outside neovim
 set autoread
 au FocusGained * :checktime
-
-autocmd CompleteDone * pclose!
 
 " " theming
 autocmd! FileType fzf set laststatus=0 noshowmode noruler
@@ -106,8 +104,6 @@ nnoremap <silent> <C-F> :TestFile<CR>
 """"""""""""""""
 
 autocmd CompleteDone * pclose!
-command Autopep8 :!autopep8 -i %
-
 
 function! s:OnEvent(job_id, data, event) dict
   if a:event == 'stdout'
@@ -146,7 +142,37 @@ endif
 
 let g:barbar_auto_setup = v:false " disable auto-setup
 
-" Lua script for config
+" Use <Tab> and Shift-Tab to navigate through popup menu
+" As we ussualy use for editors like vscode, jetbrains editors, etc.
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+" --- luasnip stuffs
+
+" press <Tab> to expand or jump in a snippet. These can also be mapped separately
+" via <Plug>luasnip-expand-snippet and <Plug>luasnip-jump-next.
+imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' 
+
+" -1 for jumping backwards.
+inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>
+snoremap <silent> <Tab> <cmd>lua require('luasnip').jump(1)<Cr>
+snoremap <silent> <S-Tab> <cmd>lua require('luasnip').jump(-1)<Cr>
+
+" For changing choices in choiceNodes (not strictly necessary for a basic setup).
+imap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
+smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
+
+
+" Set completeopt to have a better completion experience, to avoid violent
+" autocomplete
+" set completeopt=menuone,noinsert,noselect
+" with luasnip
+set completeopt=menu,menuone,noselect
+
+" Avoid showing message extra message when using completion
+set shortmess+=c
+
+"------ Lua script for config
 lua << EOF
 require'barbar'.setup {…}
 local nvim_lsp = require('lspconfig')
@@ -285,46 +311,30 @@ end
 
 -- Treesitter, one plugin to highlight anything
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  -- ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  ensure_installed = { "python", "elixir", "vim", "vimdoc" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
 
   highlight = {
     enable = true,              -- false will disable the whole extension
+    additional_vim_regex_highlighting = false,
   },
+
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "gnn", -- set to `false` to disable one of the mappings
+      node_incremental = "grn",
+      scope_incremental = "grc",
+      node_decremental = "grm",
+    },
+  },
+
 }
 
 -- which key
 require("which-key").setup {}
 EOF
-
-" Use <Tab> and Shift-Tab to navigate through popup menu
-" As we ussualy use for editors like vscode, jetbrains editors, etc.
-inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-
-" --- luasnip stuffs
-
-" press <Tab> to expand or jump in a snippet. These can also be mapped separately
-" via <Plug>luasnip-expand-snippet and <Plug>luasnip-jump-next.
-imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' 
-" -1 for jumping backwards.
-inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>
-
-snoremap <silent> <Tab> <cmd>lua require('luasnip').jump(1)<Cr>
-snoremap <silent> <S-Tab> <cmd>lua require('luasnip').jump(-1)<Cr>
-
-" For changing choices in choiceNodes (not strictly necessary for a basic setup).
-imap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
-smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
-
-
-" Set completeopt to have a better completion experience, to avoid violent
-" autocomplete
-" set completeopt=menuone,noinsert,noselect
-" with luasnip
-set completeopt=menu,menuone,noselect
-
-" Avoid showing message extra message when using completion
-set shortmess+=c
+" ---- END LUA SCRIPT
