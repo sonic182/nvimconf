@@ -23,7 +23,7 @@ Plug 'folke/which-key.nvim'
 
 " Syntax
 Plug 'neovim/nvim-lspconfig'
-" Plug 'elixir-lang/vim-elixir'
+Plug 'elixir-lang/vim-elixir'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
 Plug 'hrsh7th/cmp-nvim-lsp'
@@ -34,6 +34,7 @@ Plug 'hrsh7th/nvim-cmp'
 
 Plug 'L3MON4D3/LuaSnip'
 Plug 'saadparwaiz1/cmp_luasnip'
+Plug 'hedyhli/outline.nvim'
 
 " Editing
 Plug 'terryma/vim-multiple-cursors'
@@ -89,6 +90,7 @@ nnoremap <C-p> :Files<CR>
 """ mapping vim-test 
 " make test commands execute using dispatch.vim
 let test#strategy = "neovim"
+let test#python#runner = 'pytest'
 nnoremap <silent> <C-T> :TestNearest<CR>
 nnoremap <silent> <C-F> :TestFile<CR>
 " nnoremap <silent> <C-a> :TestSuite<CR>
@@ -175,7 +177,7 @@ set shortmess+=c
 "------ Lua script for config
 lua << EOF
 require'barbar'.setup {…}
-local nvim_lsp = require('lspconfig')
+local lspconfig = require('lspconfig')
 
 -- auto complete
 local cmp = require'cmp'
@@ -214,64 +216,100 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 -- local completion_on_attach=require'completion'.on_attach
 
--- Mappings.
-local opts = { noremap=true, silent=true }
-vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
-vim.api.nvim_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
-vim.api.nvim_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
-vim.api.nvim_set_keymap('n', '<space>q', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
-vim.api.nvim_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+-- Global Mappings
 
--- Use an on_attach function to only map the following keys
--- after the language server attaches to the current buffer
-local on_attach = function(client, bufnr)
-  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 
-  --Enable completion triggered by <c-x><c-o>
-  -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-
-  -- Mappings.
-  -- See `:help vim.lsp.*` for documentation on any of the below functions
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-
-end
+-- vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting)
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
 -- solargraph for ruby. if any of these servers is not installed, it does nothing, no slowdown to neovim, etc.
-local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph", "elixirls", "gopls" }
+local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph", "gopls", "volar", "lexical" }
+-- add custom lexical config befor esetup
+local lspconfigs = require("lspconfig.configs")
+
+local lexical_config = {
+  filetypes = { "elixir", "eelixir", "heex" },
+  cmd = { "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
+  settings = {},
+}
+
+if not lspconfigs.lexical then
+  lspconfigs.lexical = {
+    default_config = {
+      filetypes = lexical_config.filetypes,
+      cmd = lexical_config.cmd,
+      root_dir = function(fname)
+        return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
+      end,
+      -- optional settings
+      settings = lexical_config.settings,
+    },
+  }
+end
+
 for _, lsp in ipairs(servers) do
   if lsp == "elixirls" then
-    nvim_lsp[lsp].setup {
-      on_attach = on_attach,
+    lspconfig[lsp].setup {
+      -- on_attach = on_attach,
       capabilities = capabilities,
       cmd = { "/opt/johanderson/elixir-ls/language_server.sh" };
-      flags = {
-        debounce_text_changes = 150,
-      }
+      -- flags = {
+      --   debounce_text_changes = 150,
+      -- }
+    }
+  elseif lsp == "lexical" then
+    lspconfig[lsp].setup({})
+  elseif lsp == "volar" then
+    lspconfig[lsp].setup {
+      capabilities = capabilities,
+      filetypes = {'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'json'}
     }
   else
-    nvim_lsp[lsp].setup {
-      on_attach = on_attach,
+    lspconfig[lsp].setup {
+      -- on_attach = on_attach,
       capabilities = capabilities,
-      flags = {
-        debounce_text_changes = 150,
-      }
+      -- flags = {
+      --   debounce_text_changes = 150,
+      -- }
     }
   end
 end
+
+-- Use LspAttach autocommand to only map the following keys
+-- after the language server attaches to the current buffer
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+  callback = function(ev)
+    -- Enable completion triggered by <c-x><c-o>
+    vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
+
+    -- Buffer local mappings.
+    -- See `:help vim.lsp.*` for documentation on any of the below functions
+    local opts = { buffer = ev.buf }
+    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+    vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+    vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
+    vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
+    vim.keymap.set('n', '<space>wl', function()
+      print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+    end, opts)
+    vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
+    vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    vim.keymap.set('n', '<space>f', function()
+      vim.lsp.buf.format { async = true }
+    end, opts)
+  end,
+})
 
 -- nvim_lsp.diagnosticls.setup {
 --   filetypes = { "python" },
@@ -312,7 +350,7 @@ end
 -- Treesitter, one plugin to highlight anything
 require'nvim-treesitter.configs'.setup {
   -- ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  ensure_installed = { "python", "elixir", "vim", "vimdoc" },
+  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
@@ -336,5 +374,7 @@ require'nvim-treesitter.configs'.setup {
 
 -- which key
 require("which-key").setup {}
+-- Outline
+require("outline").setup({})
 EOF
 " ---- END LUA SCRIPT
