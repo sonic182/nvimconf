@@ -76,6 +76,7 @@ autocmd VimEnter * AirlineTheme dark
 autocmd VimEnter * highlight Pmenu ctermbg=LightGray guibg=#888888 guifg=#222222
 autocmd VimEnter * highlight CocErrorSign guifg=#f1f1f1
 
+:colorscheme vim
 
 """"""""""""
 " Mappings!!
@@ -350,10 +351,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Treesitter, one plugin to highlight anything
 require'nvim-treesitter.configs'.setup {
   -- ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue" },
+  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue", "lua" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
+  sync_install = true,
+
+  -- Automatically install missing parsers when entering buffer
+  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
+  auto_install = true,
+
 
   highlight = {
     enable = true,              -- false will disable the whole extension
