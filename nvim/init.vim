@@ -229,7 +229,7 @@ vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
 -- solargraph for ruby. if any of these servers is not installed, it does nothing, no slowdown to neovim, etc.
-local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph", "gopls", "volar", "lexical" }
+local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical" }
 -- add custom lexical config befor esetup
 local lspconfigs = require("lspconfig.configs")
 
