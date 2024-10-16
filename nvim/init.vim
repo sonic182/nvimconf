@@ -20,11 +20,16 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'folke/which-key.nvim'
 
+" AI completions
+" Plug 'nvim-telescope/telescope.nvim', " Optional: For using slash commands
+Plug 'olimorris/codecompanion.nvim'
+
 
 " Syntax
 Plug 'neovim/nvim-lspconfig'
 Plug 'elixir-lang/vim-elixir'
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
 
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
@@ -37,6 +42,7 @@ Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'hedyhli/outline.nvim'
 
 " Editing
+Plug 'preservim/nerdtree'
 Plug 'terryma/vim-multiple-cursors'
 " Awesome test plugin
 Plug 'janko-m/vim-test'
@@ -179,6 +185,60 @@ set shortmess+=c
 lua << EOF
 require'barbar'.setup {…}
 local lspconfig = require('lspconfig')
+local codecompanion_adapters = require("codecompanion.adapters")
+
+
+local function read_file(file_path)
+  local file = io.open(file_path, "r") -- Open the file in read mode
+  if not file then
+    error("Could not open file: " .. file_path)
+  end
+  local api_key = file:read("*l") -- Read the first line
+  file:close() -- Close the file
+  return api_key
+end
+
+
+require("codecompanion").setup({
+  strategies = {
+    chat = {
+      adapter = "llama32",
+    },
+    inline = {
+      adapter = "openai",
+    },
+    -- agent = {
+    --   adapter = "llama32",
+    -- },
+  },
+  adapters = {
+    llama32 = function()
+      return codecompanion_adapters.extend("ollama", {
+        name = "llama3.2", -- Give this adapter a different name to differentiate it from the default ollama adapter
+        schema = {
+          model = {
+            default = "llama3.2:3b",
+          },
+          num_ctx = {
+            default = 32768,
+          }
+        },
+      })
+    end,
+    openai = function()
+      return codecompanion_adapters.extend("openai", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/openaikey"),
+        },
+        schema = {
+          model = {
+            default = "gpt-4o-mini"
+          }
+        }
+      })
+    end,
+  },
+})
 
 -- auto complete
 local cmp = require'cmp'
@@ -229,7 +289,7 @@ vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
 -- solargraph for ruby. if any of these servers is not installed, it does nothing, no slowdown to neovim, etc.
-local servers = { "pyright", "rust_analyzer", "tsserver", "solargraph", "gopls", "volar", "lexical" }
+local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical" }
 -- add custom lexical config befor esetup
 local lspconfigs = require("lspconfig.configs")
 
@@ -312,6 +372,16 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
+-- Keymap for CodeCompanion
+vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionChat Add<cr>", { noremap = true, silent = true })
+
+-- Expand 'cc' into 'CodeCompanion' in the command line
+vim.cmd([[cab cc CodeCompanion]])
+
 -- nvim_lsp.diagnosticls.setup {
 --   filetypes = { "python" },
 --   init_options = {
@@ -351,7 +421,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Treesitter, one plugin to highlight anything
 require'nvim-treesitter.configs'.setup {
   -- ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue", "lua" },
+  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue", "lua", "markdown" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = true,
