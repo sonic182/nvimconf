@@ -203,6 +203,15 @@ require("codecompanion").setup({
   strategies = {
     chat = {
       adapter = "llama32",
+      keymaps = {
+        close = {
+          modes = {
+            n = "<C-z>",
+            i = "<C-z>",
+          },
+        }
+      }
+    },
     },
     inline = {
       adapter = "openai",
