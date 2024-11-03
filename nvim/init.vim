@@ -212,9 +212,8 @@ require("codecompanion").setup({
         }
       }
     },
-    },
     inline = {
-      adapter = "openai",
+      adapter = "llama32",
     },
     -- agent = {
     --   adapter = "llama32",
@@ -226,7 +225,7 @@ require("codecompanion").setup({
         name = "llama3.2", -- Give this adapter a different name to differentiate it from the default ollama adapter
         schema = {
           model = {
-            default = "llama3.2:3b",
+            default = "llama3.2:latest",
           },
           num_ctx = {
             default = 32768,
