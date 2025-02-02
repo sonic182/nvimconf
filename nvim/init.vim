@@ -21,14 +21,16 @@ Plug 'junegunn/fzf.vim'
 Plug 'folke/which-key.nvim'
 
 " AI completions
-" Plug 'nvim-telescope/telescope.nvim', " Optional: For using slash commands
+Plug 'nvim-telescope/telescope.nvim', " Optional: For using slash commands
 Plug 'olimorris/codecompanion.nvim'
 
 
 " Syntax
 Plug 'neovim/nvim-lspconfig'
 Plug 'elixir-lang/vim-elixir'
-Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-lua/plenary.nvim', { 'branch': 'master' }
+" better selects
+Plug 'stevearc/dressing.nvim'
 Plug 'nvim-treesitter/nvim-treesitter'
 
 Plug 'hrsh7th/cmp-nvim-lsp'
