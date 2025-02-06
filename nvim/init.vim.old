@@ -46,6 +46,7 @@ Plug 'hedyhli/outline.nvim'
 " Editing
 Plug 'preservim/nerdtree'
 Plug 'terryma/vim-multiple-cursors'
+Plug 'stevearc/dressing.nvim'
 " Awesome test plugin
 Plug 'janko-m/vim-test'
 
@@ -204,22 +205,22 @@ end
 require("codecompanion").setup({
   strategies = {
     chat = {
-      adapter = "llama32",
+      adapter = "anthropic",
       keymaps = {
         close = {
           modes = {
-            n = "<C-z>",
-            i = "<C-z>",
+            n = "<C-q>",
+            i = "<C-q>",
           },
         }
       }
     },
     inline = {
-      adapter = "llama32",
+      adapter = "anthropic",
     },
-    -- agent = {
-    --   adapter = "llama32",
-    -- },
+    agent = {
+      adapter = "anthropic",
+    },
   },
   adapters = {
     llama32 = function()
@@ -230,7 +231,20 @@ require("codecompanion").setup({
             default = "llama3.2:latest",
           },
           num_ctx = {
-            default = 32768,
+            default = 128000,
+          }
+        },
+      })
+    end,
+    deepseek = function()
+      return codecompanion_adapters.extend("ollama", {
+        name = "deepseek-r1", -- Give this adapter a different name to differentiate it from the default ollama adapter
+        schema = {
+          model = {
+            default = "deepseek-r1:latest",
+          },
+          num_ctx = {
+            default = 8192,
           }
         },
       })
@@ -243,6 +257,42 @@ require("codecompanion").setup({
         schema = {
           model = {
             default = "gpt-4o-mini"
+          }
+        }
+      })
+    end,
+    anthropic = function()
+      return require("codecompanion.adapters").extend("anthropic", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
+        },
+        -- schema = {
+        --   model = {
+        --     default = "claude-3-5-haiku-20241022"
+        --   }
+        -- }
+      })
+    end,
+    gemini = function()
+      return require("codecompanion.adapters").extend("gemini", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/geminikey"),
+        },
+        schema = {
+          model = {
+            default = "gemini-2.0-flash-exp"
+          }
+        }
+      })
+    end,
+    anthropic = function()
+      return codecompanion_adapters.extend("anthropic", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
+        },
+        schema = {
+          model = {
+            default = "claude-3-5-haiku-20241022"
           }
         }
       })
@@ -279,6 +329,7 @@ cmp.setup({
     { name = 'luasnip' }, -- For luasnip users.
     -- { name = 'ultisnips' }, -- For ultisnips users.
     -- { name = 'snippy' }, -- For snippy users.
+    { name = 'codecompanion' },
   }, {
     { name = 'buffer' },
   })
@@ -385,8 +436,10 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Keymap for CodeCompanion
 vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap("n", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap("v", "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionChat Add<cr>", { noremap = true, silent = true })
 
 -- Expand 'cc' into 'CodeCompanion' in the command line
