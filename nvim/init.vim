@@ -204,7 +204,7 @@ end
 require("codecompanion").setup({
   strategies = {
     chat = {
-      adapter = "llama32",
+      adapter = "anthropic",
       keymaps = {
         close = {
           modes = {
@@ -215,11 +215,11 @@ require("codecompanion").setup({
       }
     },
     inline = {
-      adapter = "llama32",
+      adapter = "anthropic",
     },
-    -- agent = {
-    --   adapter = "llama32",
-    -- },
+    agent = {
+      adapter = "anthropic",
+    },
   },
   adapters = {
     llama32 = function()
@@ -243,6 +243,30 @@ require("codecompanion").setup({
         schema = {
           model = {
             default = "gpt-4o-mini"
+          }
+        }
+      })
+    end,
+    gemini = function()
+      return codecompanion_adapters.extend("gemini", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/geminikey"),
+        },
+        schema = {
+          model = {
+            default = "gemini-2.0-flash-exp"
+          }
+        }
+      })
+    end,
+    anthropic = function()
+      return codecompanion_adapters.extend("anthropic", {
+        env = {
+          api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
+        },
+        schema = {
+          model = {
+            default = "claude-3-5-haiku-20241022"
           }
         }
       })
