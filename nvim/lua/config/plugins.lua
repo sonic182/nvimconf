@@ -1,11 +1,23 @@
-
 -- lua/config/plugins.lua
 return {
   -- Styling
   { "vim-airline/vim-airline", config = function()
-      -- airline config can be set here or in options.lua
+      -- airline config
       vim.g.airline_powerline_fonts = 1
       vim.cmd("autocmd VimEnter * AirlineTheme dark")
+      
+      -- Add highlight settings
+      vim.api.nvim_create_autocmd("VimEnter", {
+        callback = function()
+          vim.api.nvim_set_hl(0, "Pmenu", {
+            bg = "#888888",
+            fg = "#222222",
+          })
+          vim.api.nvim_set_hl(0, "CocErrorSign", {
+            fg = "#f1f1f1",
+          })
+        end,
+      })
     end,
   },
   { "vim-airline/vim-airline-themes" },
@@ -22,14 +34,22 @@ return {
   { "folke/which-key.nvim", config = function() require("which-key").setup {} end },
 
   -- AI & Completions
-  { "nvim-telescope/telescope.nvim" },
-  { "olimorris/codecompanion.nvim", config = function() require("config.codecompanion") end },
+  { "nvim-telescope/telescope.nvim", tag = "0.1.8", dependencies = { "nvim-lua/plenary.nvim" } },
+  {
+    "olimorris/codecompanion.nvim",
+    config = function() require("config.codecompanion") end,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+  },
 
   -- Syntax & LSP/Completion ecosystem
   { "neovim/nvim-lspconfig", config = function() require("config.lsp") end },
   { "elixir-lang/vim-elixir" },
   { "nvim-lua/plenary.nvim" },
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate", config = function() require("config.treesitter") end },
+  -- { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate", config = function() require("config.treesitter") end },
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
   { "hrsh7th/cmp-nvim-lsp" },
   { "hrsh7th/cmp-buffer" },
   { "hrsh7th/cmp-path" },
@@ -42,7 +62,29 @@ return {
   -- Editing enhancements
   { "preservim/nerdtree" },
   { "terryma/vim-multiple-cursors" },
-  { "stevearc/dressing.nvim" },
+  {
+    "folke/snacks.nvim",
+    priority = 1000,
+    lazy = false,
+    ---@type snacks.Config
+    opts = {
+      -- your configuration comes here
+      -- or leave it empty to use the default settings
+      -- refer to the configuration section below
+      -- bigfile = { enabled = true },
+      dashboard = { enabled = true },
+      -- explorer = { enabled = true },
+      indent = { enabled = true },
+      -- input = { enabled = true },
+      picker = { enabled = true },
+      -- notifier = { enabled = true },
+      -- quickfile = { enabled = true },
+      -- scope = { enabled = true },
+      -- scroll = { enabled = true },
+      statuscolumn = { enabled = true },
+      -- words = { enabled = true },
+    },
+  },
   { "janko-m/vim-test", config = function() 
       vim.g["test#strategy"] = "neovim"
       vim.g["test#python#runner"] = "pytest"
