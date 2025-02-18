@@ -1,81 +1,41 @@
 -- lua/config/lsp.lua
 local lspconfig = require("lspconfig")
-local cmp = require("cmp")
-local luasnip = require("luasnip")
-local cmp_nvim_lsp = require("cmp_nvim_lsp")
-local capabilities = cmp_nvim_lsp.default_capabilities()
+local coq = require("coq")
 
 -- Define your list of LSP servers
 local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical" }
 
--- Custom configuration for the "lexical" server, if needed.
+-- Custom configuration for the "lexical" server
 local configs = require("lspconfig.configs")
-local lexical_config = {
-  filetypes = { "elixir", "eelixir", "heex" },
-  cmd = { "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
-  settings = {},
-}
 if not configs.lexical then
   configs.lexical = {
     default_config = {
-      filetypes = lexical_config.filetypes,
-      cmd = lexical_config.cmd,
+      filetypes = { "elixir", "eelixir", "heex" },
+      cmd = { "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       root_dir = function(fname)
-        return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
+        return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.cwd()
       end,
-      settings = lexical_config.settings,
+      settings = {},
     },
   }
 end
 
--- Loop through servers and set them up
+-- Loop through servers and set them up with COQ
 for _, server in ipairs(servers) do
   if server == "elixirls" then
-    lspconfig[server].setup {
-      capabilities = capabilities,
+    lspconfig[server].setup(coq.lsp_ensure_capabilities({
       cmd = { "/opt/johanderson/elixir-ls/language_server.sh" },
-    }
+    }))
   elseif server == "lexical" then
-    lspconfig[server].setup {}
+    lspconfig[server].setup(coq.lsp_ensure_capabilities({}))
   elseif server == "volar" then
-    lspconfig[server].setup {
-      capabilities = capabilities,
+    lspconfig[server].setup(coq.lsp_ensure_capabilities({
       filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
-    }
+    }))
   else
-    lspconfig[server].setup {
-      capabilities = capabilities,
-    }
+    lspconfig[server].setup(coq.lsp_ensure_capabilities({}))
   end
 end
-
--- Setup nvim-cmp for autocompletion
-cmp.setup({
-  snippet = {
-    expand = function(args)
-      require("luasnip").lsp_expand(args.body)
-    end,
-  },
-  mapping = cmp.mapping.preset.insert({
-    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-    ["<C-f>"] = cmp.mapping.scroll_docs(4),
-    ["<C-Space>"] = cmp.mapping.complete(),
-    ["<C-e>"] = cmp.mapping.abort(),
-    ["<CR>"] = cmp.mapping.confirm({ select = true }),
-  }),
-  sources = cmp.config.sources({
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "codecompanion" },
-  }, {
-    { name = "buffer" },
-  }),
-  window = {
-    -- Optionally enable bordered windows:
-    -- completion = cmp.config.window.bordered(),
-    -- documentation = cmp.config.window.bordered(),
-  },
-})
 
 -- Set up LspAttach autocommand to only map keys when LSP attaches
 vim.api.nvim_create_autocmd("LspAttach", {

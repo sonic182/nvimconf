@@ -45,18 +45,27 @@ return {
   },
 
   -- Syntax & LSP/Completion ecosystem
-  { "neovim/nvim-lspconfig", config = function() require("config.lsp") end },
+  {
+    "neovim/nvim-lspconfig",
+    lazy = false,
+    dependencies = {
+      -- COQ dependencies
+      { "ms-jpq/coq_nvim", branch = "coq" },
+      { "ms-jpq/coq.artifacts", branch = "artifacts" },
+      { 'ms-jpq/coq.thirdparty', branch = "3p" }
+    },
+    init = function()
+      vim.g.coq_settings = {
+        auto_start = true,
+      }
+    end,
+    config = function()
+      require("config.lsp")
+    end
+  },
   { "elixir-lang/vim-elixir" },
   { "nvim-lua/plenary.nvim" },
-  -- { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate", config = function() require("config.treesitter") end },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
-  { "hrsh7th/cmp-nvim-lsp" },
-  { "hrsh7th/cmp-buffer" },
-  { "hrsh7th/cmp-path" },
-  { "hrsh7th/cmp-cmdline" },
-  { "hrsh7th/nvim-cmp" },
-  { "L3MON4D3/LuaSnip" },
-  { "saadparwaiz1/cmp_luasnip" },
   { "hedyhli/outline.nvim", config = function() require("outline").setup({}) end },
 
   -- Editing enhancements
@@ -77,11 +86,11 @@ return {
       indent = { enabled = true },
       -- input = { enabled = true },
       picker = { enabled = true },
-      -- notifier = { enabled = true },
+      notifier = { enabled = true },
       -- quickfile = { enabled = true },
-      -- scope = { enabled = true },
+      scope = { enabled = true },
       -- scroll = { enabled = true },
-      statuscolumn = { enabled = true },
+      -- statuscolumn = { enabled = true },
       -- words = { enabled = true },
     },
   },
