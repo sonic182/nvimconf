@@ -1,28 +1,16 @@
 -- lua/config/plugins.lua
 return {
   -- Styling
-  { "vim-airline/vim-airline", config = function()
-      -- airline config
-      vim.g.airline_powerline_fonts = 1
-      vim.cmd("autocmd VimEnter * AirlineTheme dark")
-      
-      -- Add highlight settings
-      vim.api.nvim_create_autocmd("VimEnter", {
-        callback = function()
-          vim.api.nvim_set_hl(0, "Pmenu", {
-            bg = "#888888",
-            fg = "#222222",
-          })
-          vim.api.nvim_set_hl(0, "CocErrorSign", {
-            fg = "#f1f1f1",
-          })
-        end,
-      })
-    end,
+  {
+      'nvim-lualine/lualine.nvim',
+      dependencies = { 'nvim-tree/nvim-web-devicons' },
+      config = function()
+        require('lualine').setup()
+      end,
   },
-  { "vim-airline/vim-airline-themes" },
   { "nvim-tree/nvim-web-devicons" },
   { "romgrk/barbar.nvim", opts = { auto_setup = false } },
+  { "norcalli/nvim-colorizer.lua" },
 
   -- Tools
   { "chrisbra/csv.vim" },

@@ -38,12 +38,26 @@ opt.shortmess:append("c")
 
 vim.cmd("colorscheme vim")
 
+require'colorizer'.setup()
+
 -- --- Additional Configs ---
 
 -- Close preview window on completion
 vim.api.nvim_create_autocmd("CompleteDone", {
   callback = function()
     vim.cmd("pclose!")
+  end,
+})
+
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    vim.api.nvim_set_hl(0, "Pmenu", {
+      bg = "#888888",
+      fg = "#222222",
+    })
+    vim.api.nvim_set_hl(0, "CocErrorSign", {
+      fg = "#f1f1f1",
+    })
   end,
 })
 
@@ -67,12 +81,30 @@ vim.api.nvim_create_autocmd("CompleteDone", {
 --   on_exit   = on_event,
 -- }
 
--- Global promptline symbols
-vim.g.promptline_symbols = {
-  left       = "",
-  left_alt   = ">",
-  dir_sep    = " / ",
-  truncation = "...",
-  vcs_branch = "",
-  space      = " ",
-}
+-- -- airline config
+-- vim.g.airline_powerline_fonts = 1
+-- vim.cmd("autocmd VimEnter * AirlineTheme dark")
+--
+-- -- Add highlight settings
+-- vim.api.nvim_create_autocmd("VimEnter", {
+--   callback = function()
+--     vim.api.nvim_set_hl(0, "Pmenu", {
+--       bg = "#888888",
+--       fg = "#222222",
+--     })
+--     vim.api.nvim_set_hl(0, "CocErrorSign", {
+--       fg = "#f1f1f1",
+--     })
+--   end,
+-- })
+--
+--
+-- -- Global promptline symbols
+-- vim.g.promptline_symbols = {
+--   left       = "",
+--   left_alt   = ">",
+--   dir_sep    = " / ",
+--   truncation = "...",
+--   vcs_branch = "",
+--   space      = " ",
+-- }

@@ -12,7 +12,7 @@ end
 require("codecompanion").setup({
   strategies = {
     chat = {
-      adapter = "anthropic",
+      adapter = "openrouter",
       keymaps = {
         close = {
           modes = { n = "<C-q>", i = "<C-q>" },
@@ -20,10 +20,10 @@ require("codecompanion").setup({
       },
     },
     inline = {
-      adapter = "anthropic",
+      adapter = "openrouter",
     },
     agent = {
-      adapter = "anthropic",
+      adapter = "openrouter",
     },
   },
   adapters = {
@@ -58,16 +58,18 @@ require("codecompanion").setup({
         },
       })
     end,
-    groq = function()
-      local adapters = require("codecompanion.adapters")
-      return adapters.extend("openai_compatible", {
+    openrouter = function()
+      return require("codecompanion.adapters").extend("openai_compatible", {
         env = {
-          url = "https://api.groq.com",
-          api_key = read_file(os.getenv("HOME") .. "/groqkey"),
-          chat_url = "/openai/v1/chat/completions",
+          url = "https://openrouter.ai",
+          api_key = read_file(os.getenv("HOME") .. "/openrouterkey"),
+          chat_url = "/api/v1/chat/completions",
         },
         schema = {
-          model = { default = "deepseek-r1-distill-llama-70b" },
+          model = {
+            -- default = "deepseek/deepseek-r1-distill-llama-70b:free",
+            default = "anthropic/claude-3.7-sonnet",
+          },
         },
       })
     end,
