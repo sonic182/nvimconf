@@ -48,7 +48,17 @@ return {
   { "hedyhli/outline.nvim", config = function() require("outline").setup({}) end },
 
   -- Editing enhancements
-  { "preservim/nerdtree" },
+  {
+    "nvim-tree/nvim-tree.lua",
+    version = "*",
+    lazy = false,
+    dependencies = {
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("nvim-tree").setup {}
+    end,
+  },
   { "terryma/vim-multiple-cursors" },
   {
     "folke/snacks.nvim",
