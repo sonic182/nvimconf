@@ -12,7 +12,7 @@ end
 require("codecompanion").setup({
   strategies = {
     chat = {
-      adapter = "openrouter",
+      adapter = "anthropic",
       keymaps = {
         close = {
           modes = { n = "<C-q>", i = "<C-q>" },
@@ -20,10 +20,10 @@ require("codecompanion").setup({
       },
     },
     inline = {
-      adapter = "openrouter",
+      adapter = "anthropic",
     },
     agent = {
-      adapter = "openrouter",
+      adapter = "anthropic",
     },
   },
   adapters = {
@@ -94,3 +94,11 @@ require("codecompanion").setup({
     end,
   },
 })
+
+-- keymaps
+vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionChat Add<cr>", { noremap = true, silent = true })
+vim.cmd("cabbrev cc CodeCompanion")

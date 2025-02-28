@@ -5,55 +5,57 @@ local luasnip = require("luasnip")
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
 local capabilities = cmp_nvim_lsp.default_capabilities()
 
+local server_paths = {
+  lexical = "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+  elixirls = "/opt/johanderson/elixir-ls/language_server.sh"
+}
+
+local server_configs = {
+  elixirls = {
+    cmd = { server_paths.elixirls },
+    capabilities = capabilities,
+  },
+  lexical = {
+  },
+  volar = {
+    capabilities = capabilities,
+    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
+  },
+  -- Default config for other servers
+  default = {
+    capabilities = capabilities,
+  }
+}
+
 -- Define your list of LSP servers
 local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical" }
 
--- Custom configuration for the "lexical" server, if needed.
+-- Custom configuration for the "lexical" server
 local configs = require("lspconfig.configs")
-local lexical_config = {
-  filetypes = { "elixir", "eelixir", "heex" },
-  cmd = { "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
-  settings = {},
-}
 if not configs.lexical then
   configs.lexical = {
     default_config = {
-      filetypes = lexical_config.filetypes,
-      cmd = lexical_config.cmd,
+      filetypes = { "elixir", "eelixir", "heex" },
+      cmd = { server_paths.lexical },
       root_dir = function(fname)
         return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
       end,
-      settings = lexical_config.settings,
+      settings = {},
     },
   }
 end
 
 -- Loop through servers and set them up
 for _, server in ipairs(servers) do
-  if server == "elixirls" then
-    lspconfig[server].setup {
-      capabilities = capabilities,
-      cmd = { "/opt/johanderson/elixir-ls/language_server.sh" },
-    }
-  elseif server == "lexical" then
-    lspconfig[server].setup {}
-  elseif server == "volar" then
-    lspconfig[server].setup {
-      capabilities = capabilities,
-      filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
-    }
-  else
-    lspconfig[server].setup {
-      capabilities = capabilities,
-    }
-  end
+  local config = server_configs[server] or server_configs.default
+  lspconfig[server].setup(config)
 end
 
 -- Setup nvim-cmp for autocompletion
 cmp.setup({
   snippet = {
     expand = function(args)
-      require("luasnip").lsp_expand(args.body)
+      luasnip.lsp_expand(args.body)
     end,
   },
   mapping = cmp.mapping.preset.insert({
@@ -108,33 +110,3 @@ vim.keymap.set("n", "<space>e", vim.diagnostic.open_float)
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "<space>q", vim.diagnostic.setloclist)
-
--- CodeCompanion keymaps
-vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionChat Add<cr>", { noremap = true, silent = true })
-vim.cmd("cabbrev cc CodeCompanion")
-
-require("nvim-treesitter.configs").setup({
-  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue", "lua", "markdown" },
-  sync_install = true,
-  auto_install = true,
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-  incremental_selection = {
-    enable = true,
-    keymaps = {
-      init_selection = "gnn",
-      node_incremental = "grn",
-      scope_incremental = "grc",
-      node_decremental = "grm",
-    },
-  },
-})
-
-require("which-key").setup {}
-require("outline").setup({})

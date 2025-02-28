@@ -8,8 +8,11 @@ return {
         require('lualine').setup()
       end,
   },
-  { "nvim-tree/nvim-web-devicons" },
-  { "romgrk/barbar.nvim", opts = { auto_setup = false } },
+  {
+    "romgrk/barbar.nvim", 
+    opts = { auto_setup = false },
+    dependencies = { "nvim-tree/nvim-web-devicons" }
+  },
   { "norcalli/nvim-colorizer.lua" },
 
   -- Tools
@@ -17,8 +20,11 @@ return {
   { "airblade/vim-gitgutter" },
   { "tpope/vim-fugitive" },
   { "tpope/vim-surround" },
-  { "junegunn/fzf", build = function() vim.fn["fzf#install"]() end },
-  { "junegunn/fzf.vim" },
+  {
+    "junegunn/fzf", 
+    build = function() vim.fn["fzf#install"]() end,
+    dependencies = { "junegunn/fzf.vim" }
+  },
   { "folke/which-key.nvim", config = function() require("which-key").setup {} end },
 
   -- AI & Completions
@@ -35,16 +41,18 @@ return {
   -- Syntax & LSP/Completion ecosystem
   { "neovim/nvim-lspconfig", config = function() require("config.lsp") end },
   { "elixir-lang/vim-elixir" },
-  { "nvim-lua/plenary.nvim" },
-  -- { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate", config = function() require("config.treesitter") end },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
-  { "hrsh7th/cmp-nvim-lsp" },
-  { "hrsh7th/cmp-buffer" },
-  { "hrsh7th/cmp-path" },
-  { "hrsh7th/cmp-cmdline" },
-  { "hrsh7th/nvim-cmp" },
-  { "L3MON4D3/LuaSnip" },
-  { "saadparwaiz1/cmp_luasnip" },
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+      "hrsh7th/cmp-cmdline",
+      "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip",
+    }
+  },
   { "hedyhli/outline.nvim", config = function() require("outline").setup({}) end },
 
   -- Editing enhancements
@@ -70,7 +78,7 @@ return {
       -- or leave it empty to use the default settings
       -- refer to the configuration section below
       -- bigfile = { enabled = true },
-      dashboard = { enabled = true },
+      -- dashboard = { enabled = true },
       -- explorer = { enabled = true },
       indent = { enabled = true },
       -- input = { enabled = true },
@@ -79,7 +87,7 @@ return {
       -- quickfile = { enabled = true },
       -- scope = { enabled = true },
       -- scroll = { enabled = true },
-      statuscolumn = { enabled = true },
+      -- statuscolumn = { enabled = true },
       -- words = { enabled = true },
     },
   },
