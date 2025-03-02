@@ -6,8 +6,8 @@ local cmp_nvim_lsp = require("cmp_nvim_lsp")
 local capabilities = cmp_nvim_lsp.default_capabilities()
 
 local server_paths = {
-  lexical = "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
-  elixirls = "/opt/johanderson/elixir-ls/language_server.sh"
+  lexical = os.getenv("LEXICAL_PATH") or "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+  elixirls = os.getenv("ELIXIR_LS_PATH") or "/opt/johanderson/elixir-ls/language_server.sh"
 }
 
 local server_configs = {
@@ -53,6 +53,13 @@ end
 
 -- Setup nvim-cmp for autocompletion
 cmp.setup({
+  -- add source name in the completion
+  formatting = {
+    format = function(entry, vim_item)
+      vim_item.menu = entry.source.name
+      return vim_item
+    end,
+  },
   snippet = {
     expand = function(args)
       luasnip.lsp_expand(args.body)
@@ -63,12 +70,45 @@ cmp.setup({
     ["<C-f>"] = cmp.mapping.scroll_docs(4),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<C-e>"] = cmp.mapping.abort(),
-    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    -- ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<CR>"] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+            if luasnip.expandable() then
+                luasnip.expand()
+            else
+                cmp.confirm({
+                    select = true,
+                })
+            end
+        else
+            fallback()
+        end
+    end),
+    ["<Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      elseif luasnip.locally_jumpable(1) then
+        luasnip.jump(1)
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+
+    ["<S-Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_prev_item()
+      elseif luasnip.locally_jumpable(-1) then
+        luasnip.jump(-1)
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
   }),
   sources = cmp.config.sources({
     { name = "nvim_lsp" },
     { name = "luasnip" },
     { name = "codecompanion" },
+    { name = "ctags" },
   }, {
     { name = "buffer" },
   }),

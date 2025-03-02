@@ -43,6 +43,13 @@ return {
   { "elixir-lang/vim-elixir" },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
   {
+  	"L3MON4D3/LuaSnip",
+  	-- follow latest release.
+  	version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+  	-- install jsregexp (optional!).
+  	build = "make install_jsregexp"
+  },
+  {
     "hrsh7th/nvim-cmp",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
@@ -51,6 +58,10 @@ return {
       "hrsh7th/cmp-cmdline",
       "L3MON4D3/LuaSnip",
       "saadparwaiz1/cmp_luasnip",
+      -- ctags completion
+      "delphinus/cmp-ctags",
+      -- rg completion
+      -- "lukas-reineke/cmp-rg"
     }
   },
   { "hedyhli/outline.nvim", config = function() require("outline").setup({}) end },

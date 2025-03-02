@@ -18,3 +18,4 @@ require("lazy").setup("config.plugins", {
 -- Load general options and keymaps
 require("config.options")
 require("config.keymaps")
+require("config.snippets")
