@@ -1,15 +1,16 @@
 * {
     /* `otf-font-awesome` is required to be installed for icons */
-    font-family: Fira Code, FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
     font-size: 13px;
+    font-weight: bold;
 }
 
 window#waybar {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(7, 0, 43, 0.6);
     /*border-bottom: 3px solid #4a4a4a;*/
     /*border-bottom: 3px solid rgba(60, 65, 70, 0.8); */
-    color: #ffffff;
-    font-weight: bold;
+    color: #eeeeee;
+    /*font-weight: bold;*/
 
     transition-property: background-color;
     transition-duration: .5s;
@@ -96,10 +97,10 @@ button:hover {
 #scratchpad,
 #power-profiles-daemon,
 #mpd {
-    padding: 0 8px;
-    color: #ffffff;
-    /*border: 2px solid white;*/
-    /*border-radius: 8px;*/
+    padding: 4px 8px;
+    color: #eeeeee;
+    border: 1px solid white;
+    border-radius: 8px;
     margin: 0px 4px;
 }
 
@@ -119,17 +120,14 @@ button:hover {
 }
 
 #clock {
-    background-color: #4b5561;
 }
 
 #battery {
-    background-color: #3a3f4b;
     color: #ffffff;
 }
 
 #battery.charging, #battery.plugged {
     color: #ffffff;
-    background-color: #1f7a4a;
 }
 
 @keyframes blink {
@@ -141,7 +139,6 @@ button:hover {
 
 /* Using steps() as a timing function to limit CPU usage */
 #battery.critical:not(.charging) {
-    background-color: #a83232;
     color: #ffffff;
     animation-name: blink;
     animation-duration: 0.5s;
@@ -155,17 +152,14 @@ button:hover {
 }
 
 #power-profiles-daemon.performance {
-    background-color: #a83232;
     color: #ffffff;
 }
 
 #power-profiles-daemon.balanced {
-    background-color: #1f5f8b;
     color: #ffffff;
 }
 
 #power-profiles-daemon.power-saver {
-    background-color: #1fa35b;
     color: #ffffff;
 }
 
@@ -174,73 +168,57 @@ label:focus {
 }
 
 #cpu {
-    background-color: #1fa35b;
     color: #ffffff;
 }
 
 #memory {
-    background-color: #6e3f8f;
 }
 
 #disk {
-    background-color: #6d3600;
 }
 
 #backlight {
-    background-color: #5d7a7a;
 }
 
 #network {
-    background-color: #0f1145;
 }
 
 #network.disconnected {
-    background-color: #a83232;
 }
 
 #pulseaudio {
-    background-color: #3e0f45;
     color: #ffffff;
 }
 
 #pulseaudio.muted {
-    background-color: #120445;
     color: #ffffff;
 }
 
 #wireplumber {
-    background-color: #4a2f4a;
     color: #ffffff;
 }
 
 #wireplumber.muted {
-    background-color: #a83232;
 }
 
 #custom-media {
-    background-color: #3d8c6b;
     color: #ffffff;
     min-width: 100px;
 }
 
 #custom-media.custom-spotify {
-    background-color: #3d8c6b;
 }
 
 #custom-media.custom-vlc {
-    background-color: #cc8400;
 }
 
 #temperature {
-    background-color: #b06b23;
 }
 
 #temperature.critical {
-    background-color: #a83232;
 }
 
 #tray {
-    background-color: #1f5f8b;
 }
 
 #tray > .passive {
@@ -249,37 +227,29 @@ label:focus {
 
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
-    background-color: #a83232;
 }
 
 #idle_inhibitor {
-    background-color: #1f2328;
 }
 
 #idle_inhibitor.activated {
-    background-color: #3a3f4b;
     color: #ffffff;
 }
 
 #mpd {
-    background-color: #3d8c6b;
     color: #ffffff;
 }
 
 #mpd.disconnected {
-    background-color: #a83232;
 }
 
 #mpd.stopped {
-    background-color: #5d7a7a;
 }
 
 #mpd.paused {
-    background-color: #3b6f57;
 }
 
 #language {
-    background: #006a6e;
     color: #5a0650;
     padding: 0 5px;
     margin: 0 5px;
@@ -287,7 +257,6 @@ label:focus {
 }
 
 #keyboard-state {
-    background: #5e8a70;
     color: #ffffff;
     padding: 0 0px;
     margin: 0 5px;
@@ -320,13 +289,10 @@ label:focus {
 }
 
 #privacy-item.screenshare {
-    background-color: #9f4300;
 }
 
 #privacy-item.audio-in {
-    background-color: #148000;
 }
 
 #privacy-item.audio-out {
-    background-color: #004f9b;
 }
