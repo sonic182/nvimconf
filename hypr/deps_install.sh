@@ -7,7 +7,7 @@ echo "Installing Hyprland and required dependencies..."
 # sudo pacman -Syu --noconfirm
 
 # Install Hyprland and core components
-sudo pacman -S --needed --noconfirm \
+sudo pacman -S --needed  \
     hyprland \
     xdg-desktop-portal-hyprland \
     waybar \
@@ -16,22 +16,23 @@ sudo pacman -S --needed --noconfirm \
     polkit-kde-agent
 
 # Install utilities
-sudo pacman -S --needed --noconfirm \
+sudo pacman -S --needed  \
     brightnessctl \
     playerctl \
     grim \
     slurp \
     wl-clipboard \
     thunar \
-    walker
+
+yay -S --needed walker-bin
 
 # Install network utilities
-sudo pacman -S --needed --noconfirm \
+sudo pacman -S --needed  \
     networkmanager \
     nm-connection-editor
 
 # Install audio utilities
-sudo pacman -S --needed --noconfirm \
+sudo pacman -S --needed  \
     pipewire \
     pipewire-pulse \
     wireplumber
