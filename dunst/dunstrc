@@ -11,41 +11,37 @@
     width              = 400
     corner_radius      = 12
 
-    # Progress bar settings
-    progress_bar                = true
-    progress_bar_height         = 10
-    progress_bar_frame_width    = 1
-    progress_bar_min_width      = 150
-    progress_bar_max_width      = 300
-    progress_bar_corner_radius  = 4
-    progress_bar_corners        = all
-    timeout_indicator           = "background"
-
-    indicate_hidden   = true
-    show_indicators   = true
+    icon_theme = "Papirus-Dark"
+    icon_path    = "/usr/share/icons/Papirus-Dark/16x16/actions/"
+    enable_recursive_icon_lookup = true
+    # Default icon (for info notifications)
+    default_icon = "dialog-messages"
 
     # Dark theme settings
-    frame_width       = 2
-    separator_color   = frame
-    background        = "#1E1E1EE0"
-    foreground        = "#FFFFFF"
-    transparency      = 15
-    frame_color       = "#444444"
+    frame_width     = 2
+    separator_color = frame
+    background      = "#1E1E1EE0"
+    foreground      = "#FFFFFF"
+    transparency    = 15
+    frame_color     = "#444444"
 
 [urgency_low]
     background  = "#1E1E1EE0"
     foreground  = "#FFFFFF"
     frame_color = "#444444"
     timeout     = 5
+    default_icon = dialog-messages
 
 [urgency_normal]
     background  = "#1E1E1EE0"
     foreground  = "#FFFFFF"
     frame_color = "#BBBBBB"
     timeout     = 10
+    default_icon = dialog-messages
 
 [urgency_critical]
     background  = "#1E1E1ED0"
     foreground  = "#FFFFFF"
     frame_color = "#FF5555"
     timeout     = 0
+    default_icon = dialog-error
