@@ -11,6 +11,9 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- custom leader key before loading lazy
+vim.g.mapleader = ","
+
 require("lazy").setup("config.plugins", {
   -- You can add global lazy.nvim options here.
 })

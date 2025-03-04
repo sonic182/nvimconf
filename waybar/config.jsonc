@@ -30,7 +30,7 @@
         "battery",
         //"battery#bat2",
         "clock",
-        //"tray",
+        "tray",
         "custom/power"
     ],
     "hyprland/window": {
@@ -143,7 +143,7 @@
     },
     "battery": {
         "states": {
-            // "good": 95,
+            "good": 95,
             "warning": 30,
             "critical": 15
         },
@@ -177,7 +177,8 @@
         "tooltip-format": "{ifname} via {gwaddr} ",
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected ⚠",
-        "format-alt": "{ifname}: {ipaddr}/{cidr}"
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "on-click": "nm-connection-editor"
     },
     "pulseaudio": {
         "format": "{volume}% {icon} {format_source}",
@@ -216,8 +217,8 @@
       "menu-file": "$HOME/.config/waybar/power_menu.xml", // Menu file in resources folder
       "menu-actions": {
         "lock": "hyprlock",
-        "shutdown": "shutdown",
-        "reboot": "reboot",
+        "shutdown": "pkexec shutdown -h now",
+        "reboot": "pkexec reboot",
         "suspend": "systemctl suspend",
         "hibernate": "systemctl hibernate"
       }
