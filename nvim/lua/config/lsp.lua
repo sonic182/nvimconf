@@ -14,12 +14,23 @@ local server_configs = {
   elixirls = {
     cmd = { server_paths.elixirls },
     capabilities = capabilities,
-  },
+  }, 
   lexical = {
-  },
+    cmd = { server_paths.lexical },
+    capabilities = capabilities,
+  }, 
   volar = {
     capabilities = capabilities,
     filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
+  },
+  eslint = {
+    capabilities = capabilities,
+    on_attach = function(client, bufnr)
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        command = "EslintFixAll",
+      })
+    end,
   },
   -- Default config for other servers
   default = {
@@ -27,33 +38,16 @@ local server_configs = {
   }
 }
 
--- Define your list of LSP servers
-local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical" }
+-- local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical", "clangd" }
+local servers = { "pyright", "rust_analyzer", "ts_ls", "eslint", "solargraph", "gopls", "lexical", "clangd" }
 
--- Custom configuration for the "lexical" server
-local configs = require("lspconfig.configs")
-if not configs.lexical then
-  configs.lexical = {
-    default_config = {
-      filetypes = { "elixir", "eelixir", "heex" },
-      cmd = { server_paths.lexical },
-      root_dir = function(fname)
-        return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
-      end,
-      settings = {},
-    },
-  }
-end
-
--- Loop through servers and set them up
 for _, server in ipairs(servers) do
   local config = server_configs[server] or server_configs.default
   lspconfig[server].setup(config)
 end
 
--- Setup nvim-cmp for autocompletion
 cmp.setup({
-  -- add source name in the completion
+  -- add completion source name in the completion
   formatting = {
     format = function(entry, vim_item)
       vim_item.menu = entry.source.name
@@ -70,7 +64,7 @@ cmp.setup({
     ["<C-f>"] = cmp.mapping.scroll_docs(4),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<C-e>"] = cmp.mapping.abort(),
-    -- ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }),
     ["<CR>"] = cmp.mapping(function(fallback)
         if cmp.visible() then
             if luasnip.expandable() then
@@ -119,9 +113,28 @@ cmp.setup({
   },
 })
 
--- Set up LspAttach autocommand to only map keys when LSP attaches
+vim.diagnostic.config({
+  virtual_text = {
+    source = true,  -- Show source in virtual text
+    -- prefix = '■',   -- Character to prefix diagnostic messages with
+  },
+  -- float = {
+  --   source = "always",  -- Always show source in floating window
+  --   header = "",        -- No header in the floating window
+  --   prefix = "",        -- No prefix in the floating window
+  -- },
+  -- signs = true,         -- Show signs in the sign column
+  -- underline = true,     -- Underline the text with diagnostic
+  -- update_in_insert = false,  -- Don't update diagnostics in insert mode
+  -- severity_sort = true,      -- Sort diagnostics by severity
+})
+
+-- Set up LspAttach and LspDetach autocommands
+local group = vim.api.nvim_create_augroup("UserLspConfig", {})
+
+-- Attach LSP keymaps
 vim.api.nvim_create_autocmd("LspAttach", {
-  group = vim.api.nvim_create_augroup("UserLspConfig", {}),
+  group = group,
   callback = function(ev)
     vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
     local opts = { buffer = ev.buf, silent = true }
