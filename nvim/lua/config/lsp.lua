@@ -3,81 +3,119 @@ local lspconfig = require("lspconfig")
 local cmp = require("cmp")
 local luasnip = require("luasnip")
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
-local capabilities = cmp_nvim_lsp.default_capabilities()
+
+ local capabilities = cmp_nvim_lsp.default_capabilities()
+
+-- shared on_attach that sets keymaps
+local function default_on_attach(client, bufnr)
+  vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+  local opts = { buffer = bufnr, silent = true }
+  vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+  vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+  vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
+  vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
+  vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
+  vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
+  vim.keymap.set("n", "<space>wl", function()
+    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+  end, opts)
+  vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
+  vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
+  vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
+  vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+  vim.keymap.set("n", "<space>f", function()
+    vim.lsp.buf.format { async = true }
+  end, opts)
+end
+
+-- Paths (with environment overrides)
+local utils_path = os.getenv("UTILS_PATH") or "/opt/johanderson/"
 
 local server_paths = {
-  lexical = os.getenv("LEXICAL_PATH") or "/home/johanderson/sandbox/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
-  elixirls = os.getenv("ELIXIR_LS_PATH") or "/opt/johanderson/elixir-ls/language_server.sh"
+  lexical = os.getenv("LEXICAL_PATH") or utils_path .. "lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+  elixirls = os.getenv("ELIXIR_LS_PATH") or utils_path .. "elixir-ls/releases/language_server.sh",
 }
 
-local server_configs = {
-  elixirls = {
-    cmd = { server_paths.elixirls },
-    capabilities = capabilities,
-  }, 
-  lexical = {
-    cmd = { server_paths.lexical },
-    capabilities = capabilities,
-  }, 
-  volar = {
-    capabilities = capabilities,
-    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "json" },
-  },
+
+-- Per-server customizations
+local servers = {
+  pyright = {},
+  rust_analyzer = {},
+  ts_ls = {},
   eslint = {
-    capabilities = capabilities,
     on_attach = function(client, bufnr)
+      default_on_attach(client, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
         command = "EslintFixAll",
       })
     end,
   },
-  -- Default config for other servers
-  default = {
-    capabilities = capabilities,
-  }
+  solargraph = {},
+  gopls = {},
+  elixirls = {
+      cmd = {"/bin/zsh", server_paths.elixirls},
+    settings = {
+      elixirLS = {
+        dialyzerEnabled = true, -- ease startup; enable later if needed
+        fetchDeps = true,
+        mixEnv = "dev", -- avoids issues when test env is misconfigured
+      },
+    },
+  },
+  clangd = {},
+  stylelint_lsp = {},
+  -- lexical = {
+  --   cmd = { server_paths.lexical },
+  -- },
 }
 
--- local servers = { "pyright", "rust_analyzer", "ts_ls", "solargraph", "gopls", "volar", "lexical", "clangd" }
-local servers = { "pyright", "rust_analyzer", "ts_ls", "eslint", "solargraph", "gopls", "lexical", "clangd" }
+-- Default base config
+local base_config = {
+  capabilities = capabilities,
+  on_attach = default_on_attach,
+}
 
-for _, server in ipairs(servers) do
-  local config = server_configs[server] or server_configs.default
-  lspconfig[server].setup(config)
+-- Setup each server safely
+for name, custom in pairs(servers) do
+  if lspconfig[name] then
+    -- deep-merge base_config with per-server overrides
+    local cfg = vim.tbl_deep_extend("force", base_config, custom)
+    lspconfig[name].setup(cfg)
+  else
+    vim.notify(("LSP server '%s' not available in lspconfig"):format(name), vim.log.levels.WARN)
+  end
 end
 
-cmp.setup({
-  -- add completion source name in the completion
-  formatting = {
-    format = function(entry, vim_item)
-      vim_item.menu = entry.source.name
-      return vim_item
-    end,
-  },
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  mapping = cmp.mapping.preset.insert({
-    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-    ["<C-f>"] = cmp.mapping.scroll_docs(4),
-    ["<C-Space>"] = cmp.mapping.complete(),
-    ["<C-e>"] = cmp.mapping.abort(),
-    ["<CR>"] = cmp.mapping.confirm({ select = true }),
-    ["<CR>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-            if luasnip.expandable() then
-                luasnip.expand()
-            else
-                cmp.confirm({
-                    select = true,
-                })
-            end
+ cmp.setup({
+   formatting = {
+     format = function(entry, vim_item)
+       vim_item.menu = entry.source.name
+       return vim_item
+     end,
+   },
+   snippet = {
+     expand = function(args)
+       luasnip.lsp_expand(args.body)
+     end,
+   },
+   mapping = cmp.mapping.preset.insert({
+     ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+     ["<C-f>"] = cmp.mapping.scroll_docs(4),
+     ["<C-Space>"] = cmp.mapping.complete(),
+     ["<C-e>"] = cmp.mapping.abort(),
+     ["<CR>"] = cmp.mapping(function(fallback)
+       if cmp.visible() then
+         if luasnip.expandable() then
+           luasnip.expand()
         else
-            fallback()
+          cmp.confirm({ select = true })
         end
-    end),
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
     ["<Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
@@ -87,7 +125,6 @@ cmp.setup({
         fallback()
       end
     end, { "i", "s" }),
-
     ["<S-Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
@@ -107,7 +144,7 @@ cmp.setup({
     { name = "buffer" },
   }),
   window = {
-    -- Optionally enable bordered windows:
+    -- optional bordered windows, enable if desired
     -- completion = cmp.config.window.bordered(),
     -- documentation = cmp.config.window.bordered(),
   },
@@ -115,47 +152,8 @@ cmp.setup({
 
 vim.diagnostic.config({
   virtual_text = {
-    source = true,  -- Show source in virtual text
-    -- prefix = '■',   -- Character to prefix diagnostic messages with
+    source = true,
   },
-  -- float = {
-  --   source = "always",  -- Always show source in floating window
-  --   header = "",        -- No header in the floating window
-  --   prefix = "",        -- No prefix in the floating window
-  -- },
-  -- signs = true,         -- Show signs in the sign column
-  -- underline = true,     -- Underline the text with diagnostic
-  -- update_in_insert = false,  -- Don't update diagnostics in insert mode
-  -- severity_sort = true,      -- Sort diagnostics by severity
-})
-
--- Set up LspAttach and LspDetach autocommands
-local group = vim.api.nvim_create_augroup("UserLspConfig", {})
-
--- Attach LSP keymaps
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = group,
-  callback = function(ev)
-    vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
-    local opts = { buffer = ev.buf, silent = true }
-    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-    vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-    vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-    vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
-    vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
-    vim.keymap.set("n", "<space>wl", function()
-      print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-    end, opts)
-    vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
-    vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
-    vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-    vim.keymap.set("n", "<space>f", function()
-      vim.lsp.buf.format { async = true }
-    end, opts)
-  end,
 })
 
 -- Global diagnostic keymaps

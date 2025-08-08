@@ -9,10 +9,13 @@ local function read_file(file_path)
   return line
 end
 
+-- openrouter_model = "google/gemini-2.5-pro"
+openrouter_model = "anthropic/claude-sonnet-4"
+
 require("codecompanion").setup({
   strategies = {
     chat = {
-      adapter = "anthropic",
+      adapter = "openrouter",
       keymaps = {
         close = {
           modes = { n = "<C-q>", i = "<C-q>" },
@@ -20,10 +23,12 @@ require("codecompanion").setup({
       },
     },
     inline = {
-      adapter = "anthropic",
+      adapter = "openrouter",
+      -- model = "openai/gpt-4.1-mini"
     },
     agent = {
-      adapter = "anthropic",
+      adapter = "openrouter",
+      -- model = "google/gemini-2.5-pro"
     },
   },
   adapters = {
@@ -37,16 +42,16 @@ require("codecompanion").setup({
         },
       })
     end,
-    deepseek = function()
-      local codecompanion_adapters = require("codecompanion.adapters")
-      return codecompanion_adapters.extend("ollama", {
-        name = "deepseek-r1",
-        schema = {
-          model = { default = "deepseek-r1:latest" },
-          num_ctx = { default = 8192 },
-        },
-      })
-    end,
+    -- deepseek = function()
+    --   local codecompanion_adapters = require("codecompanion.adapters")
+    --   return codecompanion_adapters.extend("ollama", {
+    --     name = "deepseek-r1",
+    --     schema = {
+    --       model = { default = "deepseek-r1:latest" },
+    --       num_ctx = { default = 8192 },
+    --     },
+    --   })
+    -- end,
     openai = function()
       local codecompanion_adapters = require("codecompanion.adapters")
       return codecompanion_adapters.extend("openai", {
@@ -54,7 +59,7 @@ require("codecompanion").setup({
           api_key = read_file(os.getenv("HOME") .. "/openaikey"),
         },
         schema = {
-          model = { default = "gpt-4o-mini" },
+          model = { default = "gpt-4.1-mini" },
         },
       })
     end,
@@ -64,31 +69,12 @@ require("codecompanion").setup({
           url = "https://openrouter.ai",
           api_key = read_file(os.getenv("HOME") .. "/openrouterkey"),
           chat_url = "/api/v1/chat/completions",
+          models_endpoint = "/api/v1/models"
         },
         schema = {
           model = {
-            -- default = "deepseek/deepseek-r1-distill-llama-70b:free",
-            default = "anthropic/claude-3.7-sonnet",
+            default = openrouter_model
           },
-        },
-      })
-    end,
-    anthropic = function()
-      local adapters = require("codecompanion.adapters")
-      return adapters.extend("anthropic", {
-        env = {
-          api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
-        },
-      })
-    end,
-    gemini = function()
-      local adapters = require("codecompanion.adapters")
-      return adapters.extend("gemini", {
-        env = {
-          api_key = read_file(os.getenv("HOME") .. "/geminikey"),
-        },
-        schema = {
-          model = { default = "gemini-2.0-flash-exp" },
         },
       })
     end,
