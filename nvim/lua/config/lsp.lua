@@ -4,7 +4,7 @@ local cmp = require("cmp")
 local luasnip = require("luasnip")
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
- local capabilities = cmp_nvim_lsp.default_capabilities()
+local capabilities = cmp_nvim_lsp.default_capabilities()
 
 -- shared on_attach that sets keymaps
 local function default_on_attach(client, bufnr)
@@ -37,38 +37,17 @@ local server_paths = {
   elixirls = os.getenv("ELIXIR_LS_PATH") or utils_path .. "elixir-ls/releases/language_server.sh",
 }
 
-
--- Per-server customizations
-local servers = {
-  pyright = {},
-  rust_analyzer = {},
-  ts_ls = {},
-  eslint = {
-    on_attach = function(client, bufnr)
-      default_on_attach(client, bufnr)
-      vim.api.nvim_create_autocmd("BufWritePre", {
-        buffer = bufnr,
-        command = "EslintFixAll",
-      })
-    end,
-  },
-  solargraph = {},
-  gopls = {},
-  elixirls = {
-      cmd = {"/bin/zsh", server_paths.elixirls},
-    settings = {
-      elixirLS = {
-        dialyzerEnabled = true, -- ease startup; enable later if needed
-        fetchDeps = true,
-        mixEnv = "dev", -- avoids issues when test env is misconfigured
-      },
-    },
-  },
-  clangd = {},
-  stylelint_lsp = {},
-  -- lexical = {
-  --   cmd = { server_paths.lexical },
-  -- },
+-- List of allowed LSP servers
+local allowed_servers = {
+  "pyright",
+  "rust_analyzer", 
+  "ts_ls",
+  "eslint",
+  "solargraph",
+  "gopls",
+  "elixirls",
+  "clangd",
+  "stylelint_lsp",
 }
 
 -- Default base config
@@ -77,38 +56,63 @@ local base_config = {
   on_attach = default_on_attach,
 }
 
--- Setup each server safely
-for name, custom in pairs(servers) do
-  if lspconfig[name] then
-    -- deep-merge base_config with per-server overrides
-    local cfg = vim.tbl_deep_extend("force", base_config, custom)
-    lspconfig[name].setup(cfg)
+-- Custom configurations for specific servers
+local custom_configs = {
+  eslint = {
+    capabilities = capabilities,
+    on_attach = function(client, bufnr)
+      default_on_attach(client, bufnr)
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        command = "EslintFixAll",
+      })
+    end,
+  },
+  elixirls = {
+    capabilities = capabilities,
+    on_attach = default_on_attach,
+    cmd = {"/bin/zsh", server_paths.elixirls},
+    settings = {
+      elixirLS = {
+        dialyzerEnabled = true,
+        fetchDeps = true,
+        mixEnv = "dev",
+      },
+    },
+  },
+}
+
+-- Setup each server
+for _, server_name in ipairs(allowed_servers) do
+  if lspconfig[server_name] then
+    local config = custom_configs[server_name] or base_config
+    lspconfig[server_name].setup(config)
   else
-    vim.notify(("LSP server '%s' not available in lspconfig"):format(name), vim.log.levels.WARN)
+    vim.notify(("LSP server '%s' not available in lspconfig"):format(server_name), vim.log.levels.WARN)
   end
 end
 
- cmp.setup({
-   formatting = {
-     format = function(entry, vim_item)
-       vim_item.menu = entry.source.name
-       return vim_item
-     end,
-   },
-   snippet = {
-     expand = function(args)
-       luasnip.lsp_expand(args.body)
-     end,
-   },
-   mapping = cmp.mapping.preset.insert({
-     ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-     ["<C-f>"] = cmp.mapping.scroll_docs(4),
-     ["<C-Space>"] = cmp.mapping.complete(),
-     ["<C-e>"] = cmp.mapping.abort(),
-     ["<CR>"] = cmp.mapping(function(fallback)
-       if cmp.visible() then
-         if luasnip.expandable() then
-           luasnip.expand()
+cmp.setup({
+  formatting = {
+    format = function(entry, vim_item)
+      vim_item.menu = entry.source.name
+      return vim_item
+    end,
+  },
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end,
+  },
+  mapping = cmp.mapping.preset.insert({
+    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+    ["<C-f>"] = cmp.mapping.scroll_docs(4),
+    ["<C-Space>"] = cmp.mapping.complete(),
+    ["<C-e>"] = cmp.mapping.abort(),
+    ["<CR>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        if luasnip.expandable() then
+          luasnip.expand()
         else
           cmp.confirm({ select = true })
         end
