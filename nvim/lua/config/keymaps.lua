@@ -17,6 +17,8 @@ map("v", "<C-g>", "<cmd>CodeCompanionChat Toggle<cr>", opts)
 map("v", "ga", "<cmd>CodeCompanionChat Add<cr>", opts)
 map('n', '<leader>e', ':NvimTreeToggle<CR>', opts)
 
+-- Add :Format command to format current buffer using LSP formatter
+vim.api.nvim_create_user_command('Format', function()
+  vim.lsp.buf.format({ async = true })
+end, { desc = "Format current buffer" })
 
--- Command-line abbreviation
-vim.cmd("cabbrev cc CodeCompanion")

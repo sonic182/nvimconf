@@ -24,9 +24,11 @@ local function default_on_attach(client, bufnr)
   vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
   vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, opts)
   vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-  vim.keymap.set("n", "<space>f", function()
-    vim.lsp.buf.format { async = true }
-  end, opts)
+  if client.server_capabilities.documentFormattingProvider then
+    vim.keymap.set("n", "<space>f", function()
+      vim.lsp.buf.format { async = true }
+    end, opts)
+  end
 end
 
 -- Paths (with environment overrides)
@@ -40,6 +42,7 @@ local server_paths = {
 -- List of allowed LSP servers
 local allowed_servers = {
   "pyright",
+  "ruff",
   "rust_analyzer", 
   "ts_ls",
   "eslint",
