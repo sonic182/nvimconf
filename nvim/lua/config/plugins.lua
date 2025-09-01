@@ -107,4 +107,8 @@ return {
       vim.g["test#python#runner"] = "pytest"
     end,
   },
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "codecompanion" }
+  },
 }

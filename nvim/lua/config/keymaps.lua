@@ -2,9 +2,14 @@ local map = vim.api.nvim_set_keymap
 local opts = { noremap = true, silent = true }
 
 -- Global mappings
-map('n', '<C-p>', ':Files<CR>', opts)
+map('n', '<C-p>', ':Telescope find_files<CR>', opts)
 map('n', '<C-T>', ':TestNearest<CR>', opts)
 map('n', '<C-F>', ':TestFile<CR>', opts)
+
+-- Create custom :format command for LSP formatting
+vim.api.nvim_create_user_command('Format', function()
+  vim.lsp.buf.format()
+end, {})
 
 -- Terminal mode: exit terminal with Esc
 vim.cmd("tnoremap <Esc> <C-\\><C-n>")
