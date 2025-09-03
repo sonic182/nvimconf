@@ -38,7 +38,7 @@ opt.shortmess:append("c")
 
 vim.cmd("colorscheme vim")
 
-require'colorizer'.setup()
+require 'colorizer'.setup()
 
 -- --- Additional Configs ---
 

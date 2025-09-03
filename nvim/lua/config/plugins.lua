@@ -2,14 +2,14 @@
 return {
   -- Styling
   {
-      'nvim-lualine/lualine.nvim',
-      dependencies = { 'nvim-tree/nvim-web-devicons' },
-      config = function()
-        require('lualine').setup()
-      end,
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('lualine').setup()
+    end,
   },
   {
-    "romgrk/barbar.nvim", 
+    "romgrk/barbar.nvim",
     opts = { auto_setup = false },
     dependencies = { "nvim-tree/nvim-web-devicons" }
   },
@@ -21,14 +21,14 @@ return {
   { "tpope/vim-fugitive" },
   { "tpope/vim-surround" },
   {
-    "junegunn/fzf", 
+    "junegunn/fzf",
     build = function() vim.fn["fzf#install"]() end,
     dependencies = { "junegunn/fzf.vim" }
   },
-  { "folke/which-key.nvim", config = function() require("which-key").setup {} end },
+  { "folke/which-key.nvim",          config = function() require("which-key").setup {} end },
 
   -- AI & Completions
-  { "nvim-telescope/telescope.nvim", tag = "0.1.8", dependencies = { "nvim-lua/plenary.nvim" } },
+  { "nvim-telescope/telescope.nvim", tag = "0.1.8",                                        dependencies = { "nvim-lua/plenary.nvim" } },
   {
     "olimorris/codecompanion.nvim",
     config = function() require("config.codecompanion") end,
@@ -39,15 +39,15 @@ return {
   },
 
   -- Syntax & LSP/Completion ecosystem
-  { "neovim/nvim-lspconfig", config = function() require("config.lsp") end },
+  { "neovim/nvim-lspconfig",           config = function() require("config.lsp") end },
   { "elixir-lang/vim-elixir" },
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
   {
-  	"L3MON4D3/LuaSnip",
-  	-- follow latest release.
-  	version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-  	-- install jsregexp (optional!).
-  	build = "make install_jsregexp"
+    "L3MON4D3/LuaSnip",
+    -- follow latest release.
+    version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+    -- install jsregexp (optional!).
+    build = "make install_jsregexp"
   },
   {
     "hrsh7th/nvim-cmp",
@@ -64,7 +64,7 @@ return {
       -- "lukas-reineke/cmp-rg"
     }
   },
-  { "hedyhli/outline.nvim", config = function() require("outline").setup({}) end },
+  { "hedyhli/outline.nvim",        config = function() require("outline").setup({}) end },
 
   -- Editing enhancements
   {
@@ -102,7 +102,9 @@ return {
       -- words = { enabled = true },
     },
   },
-  { "janko-m/vim-test", config = function() 
+  {
+    "janko-m/vim-test",
+    config = function()
       vim.g["test#strategy"] = "neovim"
       vim.g["test#python#runner"] = "pytest"
     end,

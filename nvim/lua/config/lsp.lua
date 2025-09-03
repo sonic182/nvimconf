@@ -1,7 +1,6 @@
 -- lua/config/lsp.lua (Neovim 0.11+ native LSP)
 
 -- === Completion stack ===
-local luasnip = require("luasnip")
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
 local capabilities = cmp_nvim_lsp.default_capabilities()
@@ -9,7 +8,7 @@ local capabilities = cmp_nvim_lsp.default_capabilities()
 -- === Paths (env overrides supported) ===
 local utils_path = os.getenv("UTILS_PATH") or "/opt/johanderson/"
 local server_paths = {
-  lexical  = os.getenv("LEXICAL_PATH")   or (utils_path .. "lexical/_build/dev/package/lexical/bin/start_lexical.sh"),
+  lexical  = os.getenv("LEXICAL_PATH") or (utils_path .. "lexical/_build/dev/package/lexical/bin/start_lexical.sh"),
   elixirls = os.getenv("ELIXIR_LS_PATH") or (utils_path .. "elixir-ls/releases/language_server.sh"),
 }
 
@@ -25,10 +24,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local opts = { buffer = bufnr, silent = true }
     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", "K",  vim.lsp.buf.hover, opts)
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
     vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-    vim.keymap.set("n", "<space>D",  vim.lsp.buf.type_definition, opts)
+    vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
     vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
     vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
     -- TODO: remove these keys if not used at all.
@@ -83,16 +82,18 @@ vim.keymap.set("n", "<space>q", vim.diagnostic.setloclist)
 
 -- === Server list ===
 local servers = {
+  "clangd",
+  "elixirls",
+  "eslint",
+  "gopls",
+  "lua_ls",
+  "marksman",
   "pyright",
   "ruff",
   "rust_analyzer",
-  "ts_ls",
-  "eslint",
   "solargraph",
-  "gopls",
-  "elixirls",
-  "clangd",
   "stylelint_lsp",
+  "ts_ls",
   -- "lexical"
 }
 
