@@ -114,7 +114,7 @@ vim.lsp.config('*', base)
 -- }))
 --
 -- Custom: ElixirLS
-vim.lsp.config("elixirls", vim.tbl_deep_extend("force", base, {
+vim.lsp.config("elixirls", {
   cmd = { "/bin/zsh", server_paths.elixirls },
   settings = {
     elixirLS = {
@@ -123,7 +123,7 @@ vim.lsp.config("elixirls", vim.tbl_deep_extend("force", base, {
       mixEnv = "dev",
     },
   },
-}))
+})
 
 -- Example: if using lexical...
 -- vim.lsp.config("lexical", vim.tbl_deep_extend("force", base, {
