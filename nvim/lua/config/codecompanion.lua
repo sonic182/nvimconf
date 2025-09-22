@@ -29,6 +29,14 @@ require("codecompanion").setup({
   strategies = {
     chat = {
       adapter = default_adapter,
+      tools = {
+        ["docker_logs"] = {
+          description = "Tail Docker logs for a container",
+          enabled = function() return vim.fn.executable("docker") == 1 end,
+          callback = "config.companion_tools.docker_logs",
+          opts = { requires_approval = true },
+        },
+      },
       keymaps = {
         close = {
           modes = { n = "<C-q>", i = "<C-q>" },
