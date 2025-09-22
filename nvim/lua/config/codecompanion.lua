@@ -14,6 +14,16 @@ openrouter_model = "anthropic/claude-sonnet-4"
 local codecompanion_adapters = require("codecompanion.adapters")
 
 require("codecompanion").setup({
+  display = {
+    diff = {
+      -- provider = "split"
+      provider_opts = {
+        inline = {
+          layout = "buffer"  -- I dislike floating default
+        }
+      }
+    }
+  },
   strategies = {
     chat = {
       adapter = "openai",
