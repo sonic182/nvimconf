@@ -13,6 +13,8 @@ end
 openrouter_model = "anthropic/claude-sonnet-4"
 local codecompanion_adapters = require("codecompanion.adapters")
 
+local default_adapter = "openai"
+
 require("codecompanion").setup({
   display = {
     diff = {
@@ -26,7 +28,7 @@ require("codecompanion").setup({
   },
   strategies = {
     chat = {
-      adapter = "openai",
+      adapter = default_adapter,
       keymaps = {
         close = {
           modes = { n = "<C-q>", i = "<C-q>" },
@@ -34,12 +36,10 @@ require("codecompanion").setup({
       },
     },
     inline = {
-      adapter = "openai",
-      -- model = "openai/gpt-4.1-mini"
+      adapter = default_adapter,
     },
     agent = {
-      adapter = "openai",
-      -- model = "google/gemini-2.5-pro"
+      adapter = default_adapter,
     },
   },
   adapters = {
@@ -61,6 +61,13 @@ require("codecompanion").setup({
           schema = {
             model = { default = "gpt-4.1-mini" },
           },
+        })
+      end,
+      anthropic = function()
+        return codecompanion_adapters.extend("anthropic", {
+          env = {
+            api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
+          }
         })
       end,
       openrouter = function()
