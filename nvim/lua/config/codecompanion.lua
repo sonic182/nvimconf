@@ -16,6 +16,13 @@ local codecompanion_adapters = require("codecompanion.adapters")
 local default_adapter = "openai"
 
 require("codecompanion").setup({
+  memory = {
+    opts = {
+      chat = {
+        enabled = true,
+      },
+    },
+  },
   display = {
     diff = {
       -- provider = "split"
