@@ -37,6 +37,13 @@ return {
       "nvim-treesitter/nvim-treesitter",
     },
   },
+  {
+    'milanglacier/minuet-ai.nvim',
+    config = function() require("config.minuet") end,
+    dependencies = { 'nvim-lua/plenary.nvim', 'hrsh7th/nvim-cmp',
+      -- 'Saghen/blink.cmp'
+    },
+  },
 
   -- Syntax & LSP/Completion ecosystem
   { "neovim/nvim-lspconfig",           config = function() require("config.lsp") end },
@@ -51,6 +58,7 @@ return {
   },
   {
     "hrsh7th/nvim-cmp",
+    config = function() require("config.cmp") end,
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",

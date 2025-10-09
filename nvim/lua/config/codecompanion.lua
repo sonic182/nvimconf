@@ -1,19 +1,10 @@
 -- lua/config/codecompanion.lua
-local function read_file(file_path)
-  local file = io.open(file_path, "r")
-  if not file then
-    error("Could not open file: " .. file_path)
-  end
-  local line = file:read("*l")
-  file:close()
-  return line
-end
+local read_file = require('config.utils').read_file
 
 -- openrouter_model = "google/gemini-2.5-pro"
-openrouter_model = "anthropic/claude-sonnet-4"
+local default_adapter = "openrouter"
+local openrouter_model = "openai/gpt-5-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
-
-local default_adapter = "openai"
 
 require("codecompanion").setup({
   memory = {
@@ -28,7 +19,7 @@ require("codecompanion").setup({
       -- provider = "split"
       provider_opts = {
         inline = {
-          layout = "buffer"  -- I dislike floating default
+          layout = "buffer" -- I dislike floating default
         }
       }
     }
@@ -59,15 +50,6 @@ require("codecompanion").setup({
   },
   adapters = {
     http = {
-      llama32 = function()
-        return codecompanion_adapters.extend("ollama", {
-          name = "llama3.2",
-          schema = {
-            model = { default = "llama3.2:latest" },
-            num_ctx = { default = 128000 },
-          },
-        })
-      end,
       openai = function()
         return codecompanion_adapters.extend("openai", {
           env = {
