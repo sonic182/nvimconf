@@ -2,7 +2,7 @@
 local read_file = require('config.utils').read_file
 
 -- openrouter_model = "google/gemini-2.5-pro"
-local default_adapter = "openrouter"
+local default_adapter = "anthropic"
 local openrouter_model = "openai/gpt-5-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
 
@@ -56,7 +56,7 @@ require("codecompanion").setup({
             api_key = read_file(os.getenv("HOME") .. "/openaikey"),
           },
           schema = {
-            model = { default = "gpt-4.1-mini" },
+            model = { default = "gpt-5-mini" },
           },
         })
       end,
@@ -64,6 +64,18 @@ require("codecompanion").setup({
         return codecompanion_adapters.extend("anthropic", {
           env = {
             api_key = read_file(os.getenv("HOME") .. "/anthropickey"),
+          },
+          schema = {
+            model = {
+              default = "claude-haiku-4-5-20251001"
+            },
+          },
+        })
+      end,
+      gemini = function()
+        return codecompanion_adapters.extend("gemini", {
+          env = {
+            api_key = read_file(os.getenv("HOME") .. "/geminikey"),
           }
         })
       end,

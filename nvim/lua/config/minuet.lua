@@ -3,26 +3,26 @@ local read_file = require('config.utils').read_file
 local my_langs = {'python', 'elixir', 'lua', 'javascript', 'typescript', }
 
 require('minuet').setup {
-  lsp = {
-    enabled_ft = my_langs,
-    -- Enables automatic completion triggering using `vim.lsp.completion.enable`
-    enabled_auto_trigger_ft = my_langs
-  },
+  -- lsp = {
+  --   enabled_ft = my_langs,
+  --   -- Enables automatic completion triggering using `vim.lsp.completion.enable`
+  --   enabled_auto_trigger_ft = my_langs
+  -- },
   virtualtext = {
     auto_trigger_ft = my_langs,
     keymap = {
       -- accept whole completion
-      accept = '<A-A>',
+      accept = '<Tab>',
       -- accept one line
-      accept_line = '<A-a>',
+      -- accept_line = '<CR>',
       -- accept n lines (prompts for number)
-      -- e.g. "A-z 2 CR" will accept 2 lines
-      accept_n_lines = '<A-z>',
+      -- e.g. "C-n 2 CR" will accept 2 lines
+      -- accept_n_lines = '<C-n>',
       -- Cycle to prev completion item, or manually invoke completion
-      prev = '<A-[>',
+      prev = '<C-]>',
       -- Cycle to next completion item, or manually invoke completion
-      next = '<A-]>',
-      dismiss = '<A-e>',
+      next = '<S-Tab>',
+      dismiss = '<C-e>',
     },
   },
   provider = 'openai_compatible',
@@ -34,7 +34,8 @@ require('minuet').setup {
       api_key = function() return read_file(os.getenv("HOME") .. "/openrouterkey") end,
       end_point = 'https://openrouter.ai/api/v1/chat/completions',
       -- model = 'moonshotai/kimi-k2',
-      model = 'meta-llama/llama-3.3-70b-instruct',
+      -- model = 'meta-llama/llama-3.3-70b-instruct',
+      model = 'anthropic/claude-haiku-4.5',
       -- model = 'openai/gpt-oss-20b',
       -- model = 'openai/gpt-4.1-mini',
       name = 'Openrouter',
