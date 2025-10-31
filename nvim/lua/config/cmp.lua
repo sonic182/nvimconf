@@ -51,7 +51,6 @@ cmp.setup({
     { name = "nvim_lsp" },
     { name = "luasnip" },
     { name = "codecompanion" },
-    -- { name = 'minuet' },
     { name = "ctags" },
   }, {
     { name = "buffer" },
