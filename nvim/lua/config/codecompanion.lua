@@ -1,7 +1,6 @@
 -- lua/config/codecompanion.lua
 local read_file = require('config.utils').read_file
 
--- openrouter_model = "google/gemini-2.5-pro"
 local default_adapter = "anthropic"
 local openrouter_model = "openai/gpt-5-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
