@@ -37,6 +37,16 @@
             }
           }
         },
+        "GPT 5.1 CODEX MINI HIGH": {
+          "id": "openai/gpt-5.1-codex-mini",
+          "reasoning": true,
+          "options": {
+            "reasoning": {
+              "effort": "high",
+              "summary": "concise"
+            }
+          }
+        },
         "GPT 5.1 CODEX LOW": {
           "id": "openai/gpt-5.1-codex",
           "reasoning": true,
@@ -55,6 +65,16 @@
               "effort": "medium",
               "summary": "concise"
             }
+          },
+        },
+        "GPT 5.1 CODEX HIGH": {
+          "id": "openai/gpt-5.1-codex",
+          "reasoning": true,
+          "options": {
+            "reasoning": {
+              "effort": "high",
+              "summary": "concise"
+            }
           }
         },
         "deepseek/deepseek-v3.1-terminus:exacto": {
@@ -62,6 +82,14 @@
           "options": {
             "provider": {
               "order": ["novita", "atlas-cloud"],
+            },
+          }
+        },
+        "deepseek/deepseek-v3.2-exp": {
+          "reasoning": true,
+          "options": {
+            "provider": {
+              "order": ["deepseek", "novita", "atlas-cloud"],
             },
           }
         },

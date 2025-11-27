@@ -1,9 +1,29 @@
 -- lua/config/codecompanion.lua
 local read_file = require('config.utils').read_file
 
-local default_adapter = "anthropic"
-local openrouter_model = "openai/gpt-5-mini"
+local default_adapter = "openrouter"
+local openrouter_model = "openai/gpt-5.1-codex-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
+
+local openrouter_env = {
+  url = "https://openrouter.ai",
+  api_key = read_file(os.getenv("HOME") .. "/openrouterkey"),
+  chat_url = "/api/v1/chat/completions",
+  models_endpoint = "/api/v1/models"
+}
+
+local openrouter_handlers = {
+  parse_message_meta = function(self, data)
+    local extra = data.extra
+    if extra and extra.reasoning then
+      data.output.reasoning = { content = extra.reasoning }
+      if data.output.content == "" then
+        data.output.content = nil
+      end
+    end
+    return data
+  end,
+}
 
 require("codecompanion").setup({
   memory = {
@@ -59,6 +79,16 @@ require("codecompanion").setup({
           },
         })
       end,
+      openai_responses = function()
+        return codecompanion_adapters.extend("openai_responses", {
+          env = {
+            api_key = read_file(os.getenv("HOME") .. "/openaikey"),
+          },
+          schema = {
+            model = { default = "gpt-5-mini" },
+          },
+        })
+      end,
       anthropic = function()
         return codecompanion_adapters.extend("anthropic", {
           env = {
@@ -80,19 +110,53 @@ require("codecompanion").setup({
       end,
       openrouter = function()
         return require("codecompanion.adapters").extend("openai_compatible", {
-          env = {
-            url = "https://openrouter.ai",
-            api_key = read_file(os.getenv("HOME") .. "/openrouterkey"),
-            chat_url = "/api/v1/chat/completions",
-            models_endpoint = "/api/v1/models"
-          },
+          env = openrouter_env,
+          handlers = openrouter_handlers,
           schema = {
             model = {
-              default = openrouter_model
+              default = openrouter_model,
             },
+            ['reasoning.effort'] = {
+              mapping = "parameters",
+              type = "string",
+              default = "medium"
+            }
           },
         })
       end,
+      openrouter_high = function()
+        return require("codecompanion.adapters").extend("openai_compatible", {
+          env = openrouter_env,
+          handlers = openrouter_handlers,
+          schema = {
+            model = {
+              default = openrouter_model,
+            },
+            ['reasoning.effort'] = {
+              mapping = "parameters",
+              type = "string",
+              default = "high"
+            }
+          },
+        })
+      end,
+      openrouter_low = function()
+        return require("codecompanion.adapters").extend("openai_compatible", {
+          env = openrouter_env,
+          handlers = openrouter_handlers,
+          schema = {
+            model = {
+              default = openrouter_model,
+            },
+            ['reasoning.effort'] = {
+              mapping = "parameters",
+              type = "string",
+              default = "low"
+            }
+          },
+        })
+      end,
+
     }
   },
 })
