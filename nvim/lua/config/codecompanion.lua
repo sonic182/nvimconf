@@ -34,6 +34,13 @@ require("codecompanion").setup({
     },
   },
   display = {
+    chat = {
+      icons = {
+        chat_fold = " ",
+      },
+      fold_reasoning = false,
+      show_reasoning = true
+    },
     diff = {
       -- provider = "split"
       provider_opts = {
