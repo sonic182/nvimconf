@@ -31,6 +31,7 @@ return {
   { "nvim-telescope/telescope.nvim", tag = "0.1.8",                                        dependencies = { "nvim-lua/plenary.nvim" } },
   {
     "olimorris/codecompanion.nvim",
+    tag = "v17.33.0",
     config = function() require("config.codecompanion") end,
     dependencies = {
       "nvim-lua/plenary.nvim",
