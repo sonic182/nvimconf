@@ -52,10 +52,10 @@ vim.keymap.set("n", "<space>q", vim.diagnostic.setloclist)
 -- === Server configurations ===
 local servers = {
   -- Ruby
-  ruby_lsp = {
-    filetypes = { "ruby", "eruby" },
-    cmd = { "ruby-lsp" },
-  },
+  -- ruby_lsp = {
+  --   filetypes = { "ruby", "eruby" },
+  --   cmd = { "ruby-lsp" },
+  -- },
   rubocop = {
     filetypes = { "ruby", "eruby" },
     cmd = { "rubocop", "--lsp" },
