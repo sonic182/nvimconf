@@ -35,7 +35,7 @@ local M = {
       strict = true,
     },
   },
-  opts = { requires_approval = true },
+  opts = { require_approval_before = true },
 
   handlers = {
     setup = function(self, tools)

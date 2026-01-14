@@ -25,26 +25,18 @@ local openrouter_handlers = {
   end,
 }
 
-local openrouter_model_choices = {
-  ["x-ai/grok-code-fast-1"] = {},
-
-  -- deepseek
-  ["deepseek/deepseek-v3.1-terminus:exacto"] = {},
-
-  -- openai models
-  ["openai/gpt-5-mini"] = {},
-  ["openai/gpt-5.1-codex-mini"] = {},
-  ["anthropic/claude-3.7-sonnet"] = {},
-
-  ["anthropic/claude-sonnet-4.5"] = {},
-  ["anthropic/claude-haiku-4.5"] = {},
-
-}
-
 require("codecompanion").setup({
-  memory = {
+  rules = {
+    default = {
+      description = "Collection of common files for all projects",
+      files = {
+        "AGENTS.md",
+      },
+      is_preset = true,
+    },
     opts = {
       chat = {
+        autoload = "default", -- The rule groups to load
         enabled = true,
       },
     },
@@ -61,12 +53,12 @@ require("codecompanion").setup({
       -- provider = "split"
       provider_opts = {
         inline = {
-          layout = "buffer" -- I dislike floating default
+          layout = "buffer"     -- I dislike floating default
         }
       }
     }
   },
-  strategies = {
+  interactions = {
     chat = {
       adapter = default_adapter,
       tools = {
@@ -136,7 +128,7 @@ require("codecompanion").setup({
           env = openrouter_env,
           handlers = openrouter_handlers,
           schema = {
-            model = { default = openrouter_model, choices = openrouter_model_choices },
+            model = { default = openrouter_model },
             ['reasoning.effort'] = {
               mapping = "parameters",
               type = "string",
@@ -150,7 +142,7 @@ require("codecompanion").setup({
           env = openrouter_env,
           handlers = openrouter_handlers,
           schema = {
-            model = { default = openrouter_model, choices = openrouter_model_choices },
+            model = { default = openrouter_model },
             ['reasoning.effort'] = {
               mapping = "parameters",
               type = "string",
@@ -164,7 +156,7 @@ require("codecompanion").setup({
           env = openrouter_env,
           handlers = openrouter_handlers,
           schema = {
-            model = { default = openrouter_model, choices = openrouter_model_choices },
+            model = { default = openrouter_model },
             ['reasoning.effort'] = {
               mapping = "parameters",
               type = "string",

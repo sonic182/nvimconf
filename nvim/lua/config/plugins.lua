@@ -31,8 +31,13 @@ return {
   { "nvim-telescope/telescope.nvim", tag = "0.1.8",                                        dependencies = { "nvim-lua/plenary.nvim" } },
   {
     "olimorris/codecompanion.nvim",
-    tag = "v17.33.0",
     config = function() require("config.codecompanion") end,
+    -- opts = {
+    --   -- NOTE: The log_level is in `opts.opts`
+    --   opts = {
+    --     log_level = "DEBUG", -- or "TRACE"
+    --   },
+    -- },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
