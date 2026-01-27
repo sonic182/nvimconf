@@ -80,16 +80,25 @@
         "deepseek/deepseek-v3.1-terminus:exacto": {
           "reasoning": true,
           "options": {
+            "quantization": ["int8"],
+            "preferredMinThroughput": {
+              "p90": 30
+            },
             "provider": {
-              "order": ["novita", "atlas-cloud"]
+              "only": ["novita", "atlas-cloud"],
+              "sort": "latency"
             }
           }
         },
         "deepseek/deepseek-v3.2-exp": {
           "reasoning": true,
           "options": {
+            "preferredMinThroughput": {
+              "p90": 30
+            },
             "provider": {
-              "order": ["deepseek", "novita", "atlas-cloud"]
+              "only": ["deepseek", "novita", "atlas-cloud"],
+              "sort": "latency"
             }
           }
         },
