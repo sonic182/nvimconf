@@ -14,7 +14,7 @@
     },
     "openrouter": {
       "options": {
-        "apiKey": "{file:~/openrouterkey}",
+        "apiKey": "{file:~/openrouterkey}"
       },
       "models": {
         "GPT 5.1 CODEX MINI LOW": {
@@ -81,16 +81,16 @@
           "reasoning": true,
           "options": {
             "provider": {
-              "order": ["novita", "atlas-cloud"],
-            },
+              "order": ["novita", "atlas-cloud"]
+            }
           }
         },
         "deepseek/deepseek-v3.2-exp": {
           "reasoning": true,
           "options": {
             "provider": {
-              "order": ["deepseek", "novita", "atlas-cloud"],
-            },
+              "order": ["deepseek", "novita", "atlas-cloud"]
+            }
           }
         },
         "anthropic/claude-haiku-4.5": {
@@ -98,41 +98,44 @@
         },
       }
     },
+  },
+  "agent": {
+    "pr-reviewer": {
+      "mode": "subagent",
+      "description": "Reviews pull requests and code changes with focus on quality, security, and best practices",
+      // "model": "openrouter/anthropic/claude-haiku-4.5",
+      "prompt": "{file:~/.config/opencode/prompts/pr-reviewer.txt}",
+      "tools": {
+        "bash": true,
+        "write": false,
+        "edit": false
+      }
     },
-    "agent": {
-      "pr-reviewer": {
-        "mode": "primary",
-        "description": "Reviews pull requests and code changes with focus on quality, security, and best practices",
-        // "model": "openrouter/anthropic/claude-haiku-4.5",
-        "prompt": "You are an expert code reviewer analyzing pull requests and code changes. Conduct thorough reviews covering: **Code Quality** - readability, maintainability, complexity, naming conventions, code duplication, and adherence to language-specific idioms. **Logic & Correctness** - bugs, edge cases, error handling, race conditions, and algorithmic efficiency. **Security** - injection vulnerabilities, authentication/authorization issues, sensitive data exposure, insecure dependencies, and OWASP top 10 concerns. **Performance** - inefficient algorithms, memory leaks, N+1 queries, unnecessary computations, and resource management. **Testing** - test coverage, test quality, missing test cases, and testability of code. **Architecture & Design** - separation of concerns, SOLID principles, design patterns, API design, and backward compatibility. **Documentation** - code comments, API documentation, README updates, and changelog entries. Structure your review as: 1) **Summary** - brief overview of changes and overall assessment. 2) **Critical Issues** - blocking problems that must be fixed (security, bugs, breaking changes). 3) **Major Concerns** - important issues affecting quality or maintainability. 4) **Minor Suggestions** - improvements and best practices. 5) **Positive Highlights** - well-implemented aspects worth noting. 6) **Questions** - clarifications needed from the author. For each issue provide: file path, line reference if applicable, description, rationale, suggested fix or code example, and severity (critical/major/minor). Be constructive, specific, and actionable. Consider the project context, existing patterns, and framework conventions. When suggesting changes, provide concrete code examples. Balance thoroughness with pragmatism - focus on impactful improvements.",
-        "tools": {
-          "bash": true,
-          "write": false,
-          "edit": false
-        }
-      },
-      "seo-expert": {
-        "description": "Reviews and improves project SEO, with emphasis on static site generators like Hugo and Jekyll",
-        "model": "openrouter/x-ai/grok-4-fast",
-        "prompt": "You are a SEO expert that helps reviewing and improving SEO for code projects. Focus on technical and content SEO: meta tags, structured data (JSON-LD), sitemaps, robots.txt, canonical URLs, redirects, URL structure, content optimization, image alt text, performance, accessibility, and SEO-friendly templates and front matter. Prioritize Hugo and Jekyll projects but support other frameworks. Your role is advisory only: do not modify files directly. Instead, produce a prioritized implementation plan of recommended changes. For each recommendation include: id, title, short summary, rationale, severity, risk, estimated_time, exact file paths to change, and either a concrete code/config snippet or a unified-diff patch. When changes are small and safe, include a patch; when potentially risky, include a detailed step-by-step plan and mark it as needing confirmation. Use the 'todowrite' tool to save the implementation plan as TODO actions that the build agent can execute. Use 'todoread' to check existing TODOs and avoid duplicates. Always provide testing and rollback steps, and recommend validators (e.g., Lighthouse, Google Structured Data Testing Tool, mobile-friendly test). Include concrete Hugo and Jekyll examples when applicable and prioritize backward-compatible changes.",
-        "tools": {
-          "todowrite": true,
-          "todoread": true,
-          "bash": false,
-          "write": false,
-          "edit": false
-        }
-      },
-      "seo-analyzer": {
-        "description": "Fetches and analyzes SEO for given URLs, generating detailed reports",
-        "model": "openrouter/x-ai/grok-4-fast",
-        "prompt": "You are an SEO analyzer that fetches and analyzes web pages for SEO issues. When given a URL, fetch the page content and perform a comprehensive SEO analysis covering: meta tags (title, description, Open Graph, Twitter Cards), structured data (JSON-LD, microdata), heading hierarchy (H1-H6), content quality and keywords, image optimization (alt text, dimensions, format), internal and external links, mobile responsiveness indicators, page performance hints (resource sizes, render-blocking resources), accessibility basics (ARIA labels, semantic HTML), canonical URLs, robots meta tags, and any technical SEO issues. Generate a detailed report with: overall SEO score/rating, critical issues (high priority fixes), warnings (medium priority improvements), recommendations (best practices), positive findings (what's done well), and actionable next steps. Present findings in a clear, structured format with specific examples from the fetched content. Use the web fetch tool to retrieve page content. Focus on analysis and reporting only - do not modify any files.",
-        "tools": {
-          "write": false,
-          "edit": false,
-          "bash": false,
-          "webfetch": true
-        }
-      },
+    "seo-expert": {
+      "description": "Reviews and improves project SEO, with emphasis on static site generators like Hugo and Jekyll",
+      "mode": "subagent",
+      "model": "openrouter/x-ai/grok-4-fast",
+      "prompt": "{file:~/.config/opencode/prompts/seo-expert.txt}",
+      "tools": {
+        "todowrite": true,
+        "todoread": true,
+        "bash": false,
+        "write": false,
+        "edit": false
+      }
     },
+    "seo-analyzer": {
+      "description": "Fetches and analyzes SEO for given URLs, generating detailed reports",
+      "mode": "subagent",
+      "model": "openrouter/x-ai/grok-4-fast",
+      "prompt": "{file:~/.config/opencode/prompts/seo-analyzer.txt}",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "webfetch": true
+      }
+    },
+  },
 }
+
