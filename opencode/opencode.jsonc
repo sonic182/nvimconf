@@ -17,70 +17,33 @@
         "apiKey": "{file:~/openrouterkey}"
       },
       "models": {
-        "GPT 5.1 CODEX MINI LOW": {
-          "id": "openai/gpt-5.1-codex-mini",
+        "z-ai/glm-4.7": {
           "reasoning": true,
           "options": {
-            "reasoning": {
-              "effort": "low",
-              "summary": "concise"
+            "preferredMinThroughput": {
+              "p90": 380
+            },
+            "provider": {
+              "quantizations": ["fp8"],
+              "only": ["siliconflow", "google-vertex", "together", "novita", "atlas-cloud"],
+              "sort": "latency"
             }
           }
         },
-        "GPT 5.1 CODEX MINI MEDIUM": {
-          "id": "openai/gpt-5.1-codex-mini",
+        "moonshotai/kimi-k2.5": {
           "reasoning": true,
           "options": {
-            "reasoning": {
-              "effort": "medium",
-              "summary": "concise"
-            }
-          }
-        },
-        "GPT 5.1 CODEX MINI HIGH": {
-          "id": "openai/gpt-5.1-codex-mini",
-          "reasoning": true,
-          "options": {
-            "reasoning": {
-              "effort": "high",
-              "summary": "concise"
-            }
-          }
-        },
-        "GPT 5.1 CODEX LOW": {
-          "id": "openai/gpt-5.1-codex",
-          "reasoning": true,
-          "options": {
-            "reasoning": {
-              "effort": "low",
-              "summary": "concise"
-            }
-          }
-        },
-        "GPT 5.1 CODEX MEDIUM": {
-          "id": "openai/gpt-5.1-codex",
-          "reasoning": true,
-          "options": {
-            "reasoning": {
-              "effort": "medium",
-              "summary": "concise"
-            }
-          },
-        },
-        "GPT 5.1 CODEX HIGH": {
-          "id": "openai/gpt-5.1-codex",
-          "reasoning": true,
-          "options": {
-            "reasoning": {
-              "effort": "high",
-              "summary": "concise"
+            "preferredMinThroughput": {
+              "p90": 50
+            },
+            "provider": {
+              "sort": "latency"
             }
           }
         },
         "deepseek/deepseek-v3.1-terminus:exacto": {
           "reasoning": true,
           "options": {
-            "quantization": ["int8"],
             "preferredMinThroughput": {
               "p90": 30
             },
