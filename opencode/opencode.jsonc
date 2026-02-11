@@ -20,54 +20,57 @@
         "z-ai/glm-4.7": {
           "reasoning": true,
           "options": {
-            "preferredMinThroughput": {
-              "p90": 380
-            },
             "provider": {
               "quantizations": ["fp8"],
               "only": ["siliconflow", "google-vertex", "together", "novita", "atlas-cloud"],
-              "sort": "latency"
+              "sort": "latency",
+              "preferred_max_latency": 5,
+              "preferred_min_throughput": {
+                "p90": 50
+              }
             }
           }
         },
         "moonshotai/kimi-k2.5": {
           "reasoning": true,
           "options": {
-            "preferredMinThroughput": {
-              "p90": 50
-            },
             "provider": {
-              "sort": "latency"
+              "sort": "latency",
+              "only": [
+                "deepinfra",
+                "fireworks",
+                "novita",
+                "moonshot"
+              ],
+              "preferred_max_latency": 5,
+              "preferred_min_throughput": {
+                "p90": 50
+              },
             }
           }
         },
         "deepseek/deepseek-v3.1-terminus:exacto": {
           "reasoning": true,
           "options": {
-            "preferredMinThroughput": {
-              "p90": 30
-            },
             "provider": {
               "only": ["novita", "atlas-cloud"],
-              "sort": "latency"
+              "sort": "latency",
+              "preferred_max_latency": 5,
+              "preferred_min_throughput": {
+                "p90": 50
+              }
             }
           }
         },
         "deepseek/deepseek-v3.2-exp": {
           "reasoning": true,
           "options": {
-            "preferredMinThroughput": {
-              "p90": 30
-            },
             "provider": {
               "only": ["deepseek", "novita", "atlas-cloud"],
               "sort": "latency"
             }
           }
-        },
-        "anthropic/claude-haiku-4.5": {
-          "options": {}
-        },
+        }
       }
     },
   },
