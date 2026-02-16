@@ -74,43 +74,15 @@
       }
     },
   },
-  "agent": {
-    "pr-reviewer": {
-      "mode": "subagent",
-      "description": "Reviews pull requests and code changes with focus on quality, security, and best practices",
-      // "model": "openrouter/anthropic/claude-haiku-4.5",
-      "prompt": "{file:~/.config/opencode/prompts/pr-reviewer.txt}",
-      "tools": {
-        "bash": true,
-        "write": false,
-        "edit": false
-      }
-    },
-    "seo-expert": {
-      "description": "Reviews and improves project SEO, with emphasis on static site generators like Hugo and Jekyll",
-      "mode": "subagent",
-      "model": "openrouter/x-ai/grok-4-fast",
-      "prompt": "{file:~/.config/opencode/prompts/seo-expert.txt}",
-      "tools": {
-        "todowrite": true,
-        "todoread": true,
-        "bash": false,
-        "write": false,
-        "edit": false
-      }
-    },
-    "seo-analyzer": {
-      "description": "Fetches and analyzes SEO for given URLs, generating detailed reports",
-      "mode": "subagent",
-      "model": "openrouter/x-ai/grok-4-fast",
-      "prompt": "{file:~/.config/opencode/prompts/seo-analyzer.txt}",
-      "tools": {
-        "write": false,
-        "edit": false,
-        "bash": false,
-        "webfetch": true
-      }
-    },
-  },
+  // "mcp": {
+  //   "playwright": {
+  //     "type": "local",
+  //     "command": [
+  //       "npx",
+  //       "@playwright/mcp@latest"
+  //     ],
+  //     "enabled": true
+  //   }
+  // },
 }
 
