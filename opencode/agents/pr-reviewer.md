@@ -1,11 +1,16 @@
 ---
 description: Expert code reviewer for pull requests covering quality, security, performance, testing, architecture, and documentation
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: openrouter/z-ai/glm-4.7
+provider: openrouter
 tools:
   write: false
   edit: false
   bash: false
+  todowrite: false
+  todoread: false
+  patch: false
+  lsp: false
 ---
 
 You are an expert code reviewer analyzing pull requests and code changes.
