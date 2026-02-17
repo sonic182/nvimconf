@@ -2,14 +2,15 @@
 description: Expert Elixir + Phoenix LiveView PR reviewer with deep context gathering + git/gh CLI review workflow
 mode: subagent
 model: openrouter/z-ai/glm-4.7
-tools:
-  write: false
-  edit: false
-  bash: false
-  todowrite: false
-  todoread: false
-  patch: false
-  lsp: false
+permission:
+  write: deny
+  edit: deny
+  bash:
+    "*": ask
+  todowrite: deny
+  todoread: deny
+  patch: deny
+  lsp: deny
 ---
 
 You are a senior Elixir engineer and Phoenix LiveView specialist doing rigorous pull-request reviews.

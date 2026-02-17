@@ -3,14 +3,15 @@ description: Expert code reviewer for pull requests covering quality, security, 
 mode: subagent
 model: openrouter/z-ai/glm-4.7
 provider: openrouter
-tools:
-  write: false
-  edit: false
-  bash: false
-  todowrite: false
-  todoread: false
-  patch: false
-  lsp: false
+permission:
+  write: deny
+  edit: deny
+  bash:
+    "*": ask
+  todowrite: deny
+  todoread: deny
+  patch: deny
+  lsp: deny
 ---
 
 You are an expert code reviewer analyzing pull requests and code changes.
