@@ -22,7 +22,7 @@
           "options": {
             "provider": {
               "quantizations": ["fp8"],
-              "only": ["siliconflow", "google-vertex", "together", "novita", "atlas-cloud"],
+              "only": ["google-vertex", "novita", "atlas-cloud"],
               "sort": "latency",
               "preferred_max_latency": 5,
               "preferred_min_throughput": {
