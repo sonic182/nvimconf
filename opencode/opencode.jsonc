@@ -17,12 +17,24 @@
         "apiKey": "{file:~/openrouterkey}"
       },
       "models": {
+        "z-ai/glm-5": {
+          "reasoning": true,
+          "options": {
+            "provider": {
+              "only": ["z-ai", "novita", "venice"],
+              "sort": "throughput",
+              "preferred_max_latency": 2,
+              "preferred_min_throughput": {
+                "p90": 40
+              }
+            }
+          }
+        },
         "z-ai/glm-4.7": {
           "reasoning": true,
           "options": {
             "provider": {
-              "quantizations": ["fp8"],
-              "only": ["google-vertex", "novita", "atlas-cloud"],
+              "only": ["google-vertex", "novita"],
               "sort": "latency",
               "preferred_max_latency": 5,
               "preferred_min_throughput": {
@@ -37,8 +49,6 @@
             "provider": {
               "sort": "latency",
               "only": [
-                "deepinfra",
-                "fireworks",
                 "novita",
                 "moonshot"
               ],
