@@ -1,5 +1,6 @@
 ---
 description: Expert Elixir + Phoenix LiveView PR reviewer with deep context gathering + git/gh CLI review workflow
+disable: true
 mode: subagent
 model: openrouter/z-ai/glm-4.7
 permission:
