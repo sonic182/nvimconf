@@ -1,13 +1,12 @@
 ---
 name: pr-reviewer-python
-description: Expert Python PR reviewer with deep context gathering and git/gh CLI workflow for backend and web applications
+description: Review Python pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Use for backend/API Python PR reviews; avoid for non-Python repos or style-only lint passes.
 license: MIT
-compatibility: opencode
+compatibility: opencode; expects git CLI and repository access; optionally uses gh CLI for PR and issue context
 metadata:
   audience: python-engineers
-  workflow: github
   language: python
-  framework: django-fastapi-flask
+  workflow: github-pr-review
 ---
 
 ## What I do
@@ -29,6 +28,12 @@ Use this when you want a rigorous PR review for Python applications (especially 
 - PR context (title/body/comments) via `gh` CLI.
 
 Ask clarifying questions only when missing context blocks correctness/security conclusions.
+
+## When not to use me
+
+- Non-Python repositories or PRs where Python is not the primary behavior surface
+- Pure formatting/lint-only changes where no behavior changed
+- Product/design requests that are not code-review tasks
 
 ## How I work
 
