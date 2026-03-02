@@ -1,8 +1,9 @@
 -- lua/config/codecompanion.lua
 local read_file = require('config.utils').read_file
 
-local default_adapter = "openrouter"
-local openrouter_model = "openai/gpt-5.1-codex-mini"
+local default_adapter = "openai_responses"
+local default_adapter_model = "gpt-5.1-codex-mini"
+local openrouter_model = "gpt-5.1-codex-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
 
 local openrouter_env = {
@@ -65,8 +66,8 @@ require("codecompanion").setup({
         ["docker_logs"] = {
           description = "Tail Docker logs for a container",
           enabled = function() return vim.fn.executable("docker") == 1 end,
-          callback = "config.companion_tools.docker_logs",
-          opts = { requires_approval = true },
+          path = "config.companion_tools.docker_logs",
+          require_approval_before = true,
         },
       },
       keymaps = {
@@ -100,7 +101,7 @@ require("codecompanion").setup({
             api_key = read_file(os.getenv("HOME") .. "/openaikey"),
           },
           schema = {
-            model = { default = "gpt-5-mini" },
+            model = { default = default_adapter_model },
           },
         })
       end,
