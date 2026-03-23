@@ -2,8 +2,8 @@
 local read_file = require('config.utils').read_file
 
 local default_adapter = "openai_responses"
-local default_adapter_model = "gpt-5.1-codex-mini"
-local openrouter_model = "gpt-5.1-codex-mini"
+local default_adapter_model = "gpt-5.4-mini"
+local openrouter_model = "openai/gpt-5.4-mini"
 local codecompanion_adapters = require("codecompanion.adapters")
 
 local openrouter_env = {
@@ -102,6 +102,11 @@ require("codecompanion").setup({
           },
           schema = {
             model = { default = default_adapter_model },
+            ['reasoning.effort'] = {
+              mapping = "parameters",
+              type = "string",
+              default = "high"
+            }
           },
         })
       end,
