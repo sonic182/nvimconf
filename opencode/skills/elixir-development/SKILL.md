@@ -1,9 +1,9 @@
 ---
 name: elixir-development
 description: |
-  Expert Elixir programming assistant enforcing idiomatic style, naming conventions, module structure, documentation, typespecs, error handling patterns (tagged tuples, with/case/try-rescue), OTP/GenServer layout, supervision trees, structs, collections, and ExUnit testing. Grounds every decision in the Elixir Style Guide and official Naming Conventions.
+  Expert Elixir programming assistant enforcing idiomatic style, naming conventions, module structure, documentation, typespecs, error handling patterns (tagged tuples, with/case/try-rescue), OTP/GenServer layout, supervision trees, structs, collections, and ExUnit testing. Also covers Phoenix Framework, Phoenix LiveView, Ecto, and distributed/fault-tolerant system design on the BEAM. Grounds every decision in the Elixir Style Guide and official Naming Conventions.
 
-  USE when: writing, reviewing, or refactoring Elixir code; designing GenServer/Agent/Task/Supervisor modules; writing ExUnit tests; adding typespecs or docs; debugging OTP issues; or enforcing consistent code style across a codebase.
+  USE when: writing, reviewing, or refactoring Elixir/Phoenix code; designing GenServer/Agent/Task/Supervisor modules; building real-time features with LiveView; working with Ecto schemas/migrations/queries; writing ExUnit tests; adding typespecs or docs; debugging OTP/BEAM issues; designing supervision trees or distributed systems; or enforcing consistent code style across a codebase.
 
   DO NOT USE for: non-Elixir languages, infrastructure/DevOps tasks unrelated to Elixir, or purely architectural discussions that have no Elixir code involved.
 ---
@@ -211,6 +211,7 @@ end
 
 - Do not use `with` for a single clause — use `case` instead.
 - Keep `else` clauses exhaustive; pattern match on the exact tagged tuple shapes your steps return.
+- **Avoid complex `else` blocks.** If you need intricate matching in `else` to figure out which clause failed, the steps are returning ambiguous shapes. Fix by normalizing return values in a private function before passing to `with`, so each error is uniquely identifiable at the call site.
 
 ### `case` (branching on a single result)
 
@@ -444,6 +445,70 @@ end
 | `OPTIMIZE:` | Performance concern |
 | `HACK:` | Code smell to refactor |
 | `REVIEW:` | Needs verification |
+
+---
+
+## Concurrency Pattern Decision Framework
+
+When choosing how to model concurrent behaviour:
+
+```
+What do you need?
+├── Stateful long-lived process         → GenServer
+├── Simple shared state, no logic       → Agent
+├── One-off async work                  → Task / Task.async + Task.await
+├── Background jobs, retries, queuing   → Oban (or Task.Supervisor for simpler cases)
+├── Event streaming / backpressure      → GenStage / Broadway
+└── Real-time UI updates                → Phoenix LiveView + PubSub
+```
+
+### Supervision Strategy Selector
+
+```
+How do children relate?
+├── Can crash independently             → :one_for_one
+├── All depend on each other            → :one_for_all
+├── Later children depend on earlier    → :rest_for_one
+└── Unknown/dynamic number of children → DynamicSupervisor
+```
+
+---
+
+## Anti-Patterns
+
+### Code
+
+| Anti-Pattern | Problem | Correct Approach |
+|---|---|---|
+| Dynamic atom creation from external input | Atoms are never GC'd; risks memory exhaustion | Map to known atoms explicitly, or use `String.to_existing_atom/1` |
+| Non-assertive map access (`map[:key]`) for required keys | Propagates `nil` silently instead of failing fast | Use `map.key` for required keys; `map[:key]` only for optional ones |
+| Non-assertive truthiness (`&&`/`\|\|`/`!` on booleans) | Too generic; hides intent when values are definitely booleans | Use strict `and`/`or`/`not` for boolean-only expressions |
+| Long parameter list | Order-dependent, easy to call incorrectly | Group related args into a struct, map, or keyword list |
+| Single pipe (`x \|> f()`) | Unnecessary noise | Call directly: `f(x)` |
+| `unless ... else` | Confusing double negation | Rewrite as `if` with positive case first |
+| Repeated namespace in module name | Redundant: `Todo.Todo` | Use `Todo.Item` — avoid fragment repetition |
+
+### Design
+
+| Anti-Pattern | Problem | Correct Approach |
+|---|---|---|
+| Alternative return types via options | Callers cannot statically know what a function returns | Create separate named functions for each distinct return shape |
+| Boolean obsession (multiple `bool` flags) | Overlapping states; combinatorial explosion of valid combinations | Replace with a single atom-typed option (e.g. `role: :admin \| :editor \| :default`) |
+| Primitive obsession | Domain concepts lost in raw strings/integers | Define structs or maps; add parser functions at system boundaries |
+| Unrelated multi-clause functions | One name hides multiple distinct, unrelated behaviors | Split into separate, clearly-named functions |
+| `raise` for expected failures | Wrong abstraction for control flow | Return `{:error, reason}` tuples |
+
+### Process / OTP
+
+| Anti-Pattern | Problem | Correct Approach |
+|---|---|---|
+| Large GenServer state | Memory bloat and slow serialization | Use external storage (ETS, DB) for large data |
+| Blocking GenServer with slow I/O | Single process becomes bottleneck | Spawn `Task` for I/O, reply asynchronously |
+| No supervision tree | Crashes are unrecoverable | Always supervise; design restart strategies |
+| `GenServer.call/cast` from outside module | Leaks internals, couples callers | Expose a typed public API in the same module |
+| Processes as code organization units | Creates unnecessary bottlenecks and coupling | Organize by modules/functions; use processes only for runtime properties (state, concurrency, fault isolation) |
+| Sending full structs in messages when only fields are needed | Wastes CPU copying and memory in message passing | Extract and pass only the minimal fields needed |
+| Defensive `try/rescue` everywhere | Hides bugs, masks failures | Let it crash; supervise and recover |
 
 ---
 
