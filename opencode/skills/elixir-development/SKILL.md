@@ -1,9 +1,9 @@
 ---
 name: elixir-development
 description: |
-  Expert Elixir assistant for writing, reviewing, and refactoring idiomatic Elixir and Phoenix code. Enforces the Elixir Style Guide and official Naming Conventions across formatting, naming, module structure, docs, typespecs, error handling, OTP, structs, collections, and tests. Also covers Phoenix, LiveView, Ecto, supervision, and BEAM-friendly concurrency, while avoiding common anti-patterns.
+  Expert Elixir assistant for writing new, reviewing, and refactoring idiomatic Elixir and Phoenix code. Use this skill for any task that introduces or changes Elixir code. Enforces the Elixir Style Guide and official Naming Conventions across formatting, naming, module structure, docs, typespecs, error handling, OTP, structs, collections, and tests. Also covers Phoenix, LiveView, Ecto, supervision, and BEAM-friendly concurrency, while avoiding common anti-patterns.
 
-  Use for: Elixir/Phoenix code, OTP modules, LiveView, Ecto, tests, docs, typespecs, and code review/refactoring.
+  Use for: any new or modified Elixir/Phoenix code, OTP modules, LiveView, Ecto, tests, docs, typespecs, and code review/refactoring.
   Do not use for: non-Elixir code, infra unrelated to Elixir, or pure architecture with no Elixir code.
 ---
 
