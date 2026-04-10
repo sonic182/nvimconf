@@ -72,24 +72,55 @@ vim.api.nvim_create_autocmd("VimEnter", {
   end,
 })
 
-require("nvim-treesitter.configs").setup({
-  ensure_installed = { "python", "elixir", "vim", "vimdoc", "vue", "lua", "markdown" },
-  sync_install = true,
-  auto_install = true,
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-  incremental_selection = {
-    enable = true,
-    keymaps = {
-      init_selection = "gnn",
-      node_incremental = "grn",
-      scope_incremental = "grc",
-      node_decremental = "grm",
-    },
-  },
-})
+local has_treesitter, treesitter = pcall(require, "nvim-treesitter")
+
+if has_treesitter then
+  local languages = {
+    "python",
+    "elixir",
+    "vim",
+    "vimdoc",
+    "vue",
+    "lua",
+    "markdown",
+    "markdown_inline",
+  }
+
+  if type(treesitter.install) == "function" then
+    treesitter.setup({
+      install_dir = vim.fn.stdpath("data") .. "/site",
+    })
+
+    local treesitter_highlight = vim.api.nvim_create_augroup("TreesitterHighlight", { clear = true })
+
+    vim.api.nvim_create_autocmd("FileType", {
+      group = treesitter_highlight,
+      pattern = "*",
+      callback = function(args)
+        pcall(vim.treesitter.start, args.buf)
+      end,
+    })
+  else
+    require("nvim-treesitter.configs").setup({
+      ensure_installed = languages,
+      sync_install = true,
+      auto_install = true,
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = false,
+      },
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = "gnn",
+          node_incremental = "grn",
+          scope_incremental = "grc",
+          node_decremental = "grm",
+        },
+      },
+    })
+  end
+end
 
 -- -- Job callbacks
 -- local function on_event(job_id, data, event)

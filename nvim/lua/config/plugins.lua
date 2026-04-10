@@ -63,7 +63,12 @@ return {
   -- Syntax & LSP/Completion ecosystem
   { "neovim/nvim-lspconfig",           config = function() require("config.lsp") end },
   { "elixir-lang/vim-elixir" },
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false,
+    build = ":TSUpdate",
+  },
   {
     "L3MON4D3/LuaSnip",
     -- follow latest release.
