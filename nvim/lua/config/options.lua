@@ -8,28 +8,42 @@ opt.tabstop = 2
 opt.shiftwidth = 2
 opt.autoindent = true
 
-vim.cmd [[
-  augroup FileTypeIndent
-    autocmd!
-    autocmd FileType python setlocal tabstop=4 shiftwidth=4
-    autocmd FileType html,javascript,ruby setlocal tabstop=2 shiftwidth=2 softtabstop=2
-  augroup END
-]]
+local filetype_indent = vim.api.nvim_create_augroup("FileTypeIndent", { clear = true })
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = filetype_indent,
+  pattern = "python",
+  callback = function()
+    vim.opt_local.tabstop = 4
+    vim.opt_local.shiftwidth = 4
+  end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = filetype_indent,
+  pattern = { "html", "javascript", "ruby" },
+  callback = function()
+    vim.opt_local.tabstop = 2
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.softtabstop = 2
+  end,
+})
 
 opt.spell = true
-vim.cmd("set spelllang=en_us")
+opt.spelllang = { "en_us" }
 opt.mouse = "a"
 opt.clipboard:append("unnamedplus")
 opt.autoread = true
-vim.cmd("autocmd FocusGained * checktime")
+
+vim.api.nvim_create_autocmd("FocusGained", {
+  callback = function()
+    vim.cmd.checktime()
+  end,
+})
 
 -- Terminal colors
 if vim.fn.has("termguicolors") == 1 then
   opt.termguicolors = true
-  vim.cmd [[
-    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-  ]]
 end
 
 -- Completion options
@@ -54,9 +68,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.api.nvim_set_hl(0, "Pmenu", {
       bg = "#888888",
       fg = "#222222",
-    })
-    vim.api.nvim_set_hl(0, "CocErrorSign", {
-      fg = "#f1f1f1",
     })
   end,
 })
