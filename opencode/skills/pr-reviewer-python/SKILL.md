@@ -105,7 +105,7 @@ If behavior cannot be confirmed due to missing context, state the assumption and
 - Typing/reliability (`typing` correctness, pydantic/dataclass/schema drift, runtime validation)
 - Testing (unit/integration coverage for happy path, auth failures, error paths, regressions)
 - Architecture (separation of routing, business logic, persistence, side effects)
-- Documentation (behavior changes, migrations, config/env updates)
+- Documentation (behavior changes, migrations, config/env updates, new features documented in the project's docs system — e.g. Sphinx, MkDocs, Starlette/FastAPI auto-docs, or any SSG — if one exists)
 
 ### 3) Required output structure (MANDATORY)
 
@@ -152,6 +152,9 @@ Rules:
   - retries idempotent and bounded?
   - exception handling preserves observability and correct status codes?
   - cache invalidation/update logic coherent with source of truth?
+- Documentation:
+  - if new user-facing features or endpoints were added, are they reflected in the project's docs system (Sphinx, MkDocs, SSG, OpenAPI/auto-generated docs, README, etc.)?
+  - if a docs system is present but new features have no docs entry, flag it as a minor issue.
 
 Tooling suggestions when relevant:
 - `ruff check .`
