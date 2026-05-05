@@ -148,8 +148,8 @@ def parse(value), do: value
 * Start pipelines from a bare variable.
 * Always use parentheses in piped calls.
 * Call zero-arity functions with `()`.
-* Use `do:` for simple one-line `if` / `unless`.
-* Never use `unless` with `else`.
+* Use `do:` for simple one-line `if`.
+* Never use `unless` — use `if ... not` instead.
 * Use `true` as final catch-all in `cond`.
 
 ```elixir
@@ -171,9 +171,11 @@ sanitized =
 ```elixir
 # good
 if valid?(user), do: :ok, else: :error
+if plan not in @accessible_plans, do: disable(account_code)
 
 # bad
 unless valid?(user), do: :error, else: :ok
+unless plan in @accessible_plans, do: disable(account_code)
 ```
 
 ## Error Handling
