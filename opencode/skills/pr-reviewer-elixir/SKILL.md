@@ -94,7 +94,7 @@ If behavior cannot be confirmed due to missing context, I state the assumption a
 - Performance (N+1, preloads, assigns growth, streams/temporary_assigns, render costs, async task hygiene)
 - Testing (LiveViewTest coverage for auth/validation/navigation/edge cases)
 - Architecture (contexts vs LiveViews, boundary discipline)
-- Documentation (behavior changes, migrations/config notes)
+- Documentation (behavior changes, migrations/config notes, new features documented in the project's docs system — e.g. HexDocs/`@moduledoc`/`@doc`, markdown files, or any SSG — if one exists)
 
 ### 3) Required output structure (MANDATORY)
 
@@ -132,6 +132,11 @@ Rules:
 - Navigation:
   - `live_action` routes consistent with `handle_params/apply_action`?
   - patch/navigate flows keep state consistent?
+
+- Documentation:
+  - if new public functions/modules were added, do they have `@moduledoc`/`@doc` entries?
+  - if new user-facing features were added, are they reflected in the project's docs (HexDocs guides, markdown files, SSG, README)?
+  - if a docs system is present but new features have no docs entry, flag it as a minor issue.
 
 Tooling suggestions when relevant:
 - `mix format --check-formatted`
