@@ -1,4 +1,4 @@
-## LOWTALK
+## BREVITY
 
 Write like every extra word costs money.
 
