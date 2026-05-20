@@ -9,7 +9,8 @@ return {
     end,
   },
   {
-    "romgrk/barbar.nvim",
+    "sonic182/barbar.nvim",
+    branch = "master",
     opts = { auto_setup = false },
     dependencies = { "nvim-tree/nvim-web-devicons" }
   },
