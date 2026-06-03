@@ -14,7 +14,11 @@ return {
     opts = { auto_setup = false },
     dependencies = { "nvim-tree/nvim-web-devicons" }
   },
-  { "norcalli/nvim-colorizer.lua" },
+  {
+    "catgoose/nvim-colorizer.lua",
+    event = "BufReadPre",
+    opts = {},
+  },
 
   -- Tools
   { "chrisbra/csv.vim" },
