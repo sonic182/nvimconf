@@ -1,96 +1,158 @@
 ---
 name: elixir-development
 description: |
-  Expert Elixir assistant for writing, reviewing, and refactoring idiomatic Elixir/Phoenix code. Use for any task that introduces or changes Elixir code. Enforces the Elixir Style Guide and official Naming Conventions across formatting, naming, module layout, docs, typespecs, error handling, OTP, structs, and collections, while avoiding the official Elixir anti-patterns. Phoenix, LiveView, Ecto, and supervision specifics live in references/phoenix-ecto-liveview.md (loaded on demand).
-
-  Use for: any new or modified Elixir/Phoenix code, OTP modules, LiveView, Ecto, tests, docs, typespecs, and code review/refactoring.
-  Do not use for: non-Elixir code, infra unrelated to Elixir, or pure architecture with no Elixir code.
+    Expert Elixir assistant for writing, reviewing, debugging, and refactoring idiomatic Elixir, Phoenix, LiveView, Ecto, OTP, and ExUnit code. Use whenever the user asks to create, modify, review, explain, modernize, or test Elixir code, including modules, contexts, schemas, migrations, LiveViews, GenServers, supervisors, tests, docs, and typespecs. Enforces project-local conventions, mix format, official naming conventions, official Elixir anti-pattern guidance, and practical idiomatic style.
 ---
 
-# SKILL.md — Elixir
+# Elixir Development
 
-Reference for generating and reviewing Elixir code. Ground all decisions in:
+Use this skill for any task that introduces, changes, reviews, debugs, or refactors Elixir code.
 
-- Elixir Style Guide: https://github.com/christopheradams/elixir_style_guide
-- Naming Conventions: https://hexdocs.pm/elixir/naming-conventions.html
-- Official anti-patterns: https://hexdocs.pm/elixir/code-anti-patterns.html (also `design-`, `process-`, and `macro-anti-patterns.html`)
+For Phoenix, LiveView, Ecto, and supervision-tree specifics, read
+`references/phoenix-ecto-liveview.md` when the task touches those areas.
 
-For Phoenix, LiveView, Ecto, and supervision detail, read `references/phoenix-ecto-liveview.md`.
+Primary references:
 
-## Core Principles
+* Elixir Naming Conventions: https://hexdocs.pm/elixir/naming-conventions.html
+* Elixir code anti-patterns: https://hexdocs.pm/elixir/code-anti-patterns.html
+* Elixir design anti-patterns: https://hexdocs.pm/elixir/design-anti-patterns.html
+* Elixir process anti-patterns: https://hexdocs.pm/elixir/process-anti-patterns.html
+* Elixir macro anti-patterns: https://hexdocs.pm/elixir/macro-anti-patterns.html
+* Mix formatter: https://hexdocs.pm/mix/Mix.Tasks.Format.html
+* Community Elixir Style Guide: https://github.com/christopheradams/elixir_style_guide
 
-- Write idiomatic, readable Elixir that already matches `mix format`.
-- Prefer simple functions over clever abstractions.
-- Prefer explicit return values over exceptions for *expected* failures.
-- Avoid the official anti-patterns even when the code is technically valid.
+## Operating Principles
+
+Write Elixir that is correct, simple, readable, and already close to `mix format`.
+
+Prefer:
+
+* Project-local conventions over generic style advice.
+* Small functions over clever abstractions.
+* Explicit return values for expected outcomes.
+* Pattern matching and tagged tuples for ordinary control flow.
+* Data transformation in pure functions, with side effects at boundaries.
+* Official Elixir guidance over house rules.
+
+Avoid:
+
+* Raising for expected failures.
+* Defensive code that hides bugs.
+* Processes used only for code organization.
+* Macros where functions, behaviours, protocols, or data would work.
+* Style churn unrelated to the user's request.
+
+## Rule Priority
+
+When rules conflict, apply this priority:
+
+1. User request and correctness.
+2. Existing public API compatibility, unless the user asks for a redesign.
+3. Project-local conventions:
+
+   * `.formatter.exs`
+   * existing module layout
+   * existing context/schema/test patterns
+   * existing error tuple shapes
+   * existing dependency choices
+4. Official Elixir docs and anti-pattern guidance.
+5. Official Phoenix, Ecto, and LiveView docs when applicable.
+6. Community Elixir Style Guide.
+7. This skill's house rules.
+
+When applying a house rule, do not present it as official Elixir guidance.
+
+## Idiomatic Enforcement Protocol
+
+When writing code:
+
+1. Inspect nearby project code when available.
+2. Preserve the existing architecture unless it is clearly broken or the user asks to change it.
+3. Generate code that should pass `mix format`.
+4. Prefer explicit, narrow APIs.
+5. Include tests when behavior changes or new behavior is introduced.
+6. Add docs and specs for public APIs when useful, especially library-style modules.
+7. Explain non-obvious idiomatic choices briefly.
+
+When reviewing code, report findings in this order:
+
+1. Correctness bugs.
+2. Security or data-leak risks.
+3. Runtime, OTP, concurrency, or supervision risks.
+4. Non-idiomatic Elixir.
+5. Maintainability and readability.
+6. Formatting and tooling.
+
+For each issue, include:
+
+* The problem.
+* Why it matters.
+* A concrete fix or replacement snippet when practical.
 
 ## Formatting
 
-Most of this is applied automatically by `mix format`; the rules are here so generated code is correct before formatting.
+Use the project `.formatter.exs` as the source of truth. Do not fight formatter output.
 
-- Max line length: 98 chars (comments may go to 100).
-- Unix line endings, trailing newline, no trailing whitespace.
-- Spaces around operators and after commas/colons/semicolons.
-- **No** spaces inside matched pairs (brackets, parens), after unary operators, or around the range operator.
-- No space before `(` in calls.
-- No blank line after `defmodule`.
-- Blank line between `def`s to separate logical paragraphs.
-- Add a blank line after a multiline assignment (visual cue the assignment is "over").
-- Multiline lists/maps/structs: one item per line, opening and closing brackets on their own lines, items indented one level, brackets not indented. **When assigning**, keep the opening bracket on the assignment line.
-- Multiline `case`/`cond`: if any clause needs multiple lines, make *all* clauses multiline and separate each with a blank line.
-- Multiline `with`: align clauses; put `do:` on a new line aligned with the clauses, or use a full `do … else … end` block when there is an `else` or a multiline body.
-- If a function head + `do:` is too long for one line, put `do:` on its own line indented one level, and treat the def as multiline (blank lines around it).
+Generate code that should pass `mix format` before formatting:
+
+* No trailing whitespace.
+* Unix line endings.
+* Trailing newline.
+* Spaces around binary operators and after commas, colons, and semicolons.
+* No space before `(` in calls.
+* No spaces inside matched pairs.
+* No blank line immediately after `defmodule`.
+* Blank lines between logically distinct functions.
+* Multiline collections use one item per line.
+* Multiline assignments are followed by a blank line before the next expression.
+* Prefer readable line breaks over dense cleverness.
+
+Good:
 
 ```elixir
-# good — no spaces in pairs, spaces around binary operators, none around unary/range
-sum = 1 + 2
-0 - 1 == -1
-^pinned = some_func()
-5 in 1..10
-
-# good — multiline assignment keeps the bracket on the assignment line
-list = [
-  :first_item,
-  :second_item
-]
-
-# good — blank line after a multiline assignment
 sanitized =
   raw_input
   |> String.trim()
   |> String.downcase()
 
-next = another <> sanitized
+next = "prefix:" <> sanitized
 ```
 
 ## Naming
 
-- Functions, variables, atoms: `snake_case`
-- Modules: `CamelCase`; acronyms stay uppercase (`HTTP`, `XML`, `RFC`)
-- Boolean predicates: trailing `?`
-- Guard-safe boolean checks: `is_` prefix with `defguard`
-- Exceptions: end with `Error`
-- Filenames: `snake_case`, matching the module path (each namespace level = a directory)
-- Avoid repeated namespace fragments (`Todo.Todo` → `Todo.Item`)
-- Private functions must not reuse a public function's name; avoid the `def name` / `defp do_name` pattern — find a more descriptive name for the helper
+Follow official Elixir naming conventions.
+
+Use:
+
+* Variables, functions, module attributes, and atoms: `snake_case`.
+* Modules and aliases: `CamelCase`.
+* Acronyms in module names: uppercase, such as `HTTP`, `XML`, `API`, `ID`.
+* Boolean predicates: trailing `?`.
+* Guard-safe boolean checks: `is_` prefix.
+* Exceptions: names ending in `Error`.
+* Filenames: `snake_case`, matching the module path by convention.
+
+Avoid:
+
+* Combining `is_` and `?`.
+* Repeated namespace fragments, such as `Todo.Todo`.
+* Private helpers named as vague `do_` versions of public functions when a domain name is clearer.
+* Reusing the same name for public and private functions when it makes call sites confusing.
 
 ```elixir
-# good
-def valid?(user), do: ...
-defguard is_admin(role) when role == :admin
-defmodule MyApp.HTTPClient do
-end
+def valid?(user), do: user.email_confirmed_at != nil  # good — predicate ends in ?
+def isValid(user), do: true                            # bad — not snake_case, no ?
 
-# bad
-def isValid(user), do: ...
-defguard admin?(role) when role == :admin   # guard-safe check should be is_admin
-defmodule MyApp.HttpClient do                # acronym must stay uppercase
-end
+defguard is_admin(role) when role == :admin            # good — is_ prefix, guard-safe
+defguard admin?(role) when role == :admin              # bad — ? isn't guard-safe
+
+MyApp.HTTPClient  # good — acronym stays uppercase
+MyApp.HttpClient  # bad — acronym should stay uppercase
 ```
 
 ## Module Layout
 
-List directives and attributes in this order, with a blank line between groups, and sort terms (alias/import module names) alphabetically within a group:
+Use this order unless the project clearly follows another convention:
 
 1. `@moduledoc`
 2. `@behaviour`
@@ -102,16 +164,22 @@ List directives and attributes in this order, with a blank line between groups, 
 8. `defstruct`
 9. `@typedoc` / `@type`
 10. `@callback` / `@macrocallback` / `@optional_callbacks`
-11. macros (`defmacro`)
-12. guards (`defguard`)
-13. public/private functions
+11. macros
+12. guards
+13. public functions
+14. private functions
 
-Also:
+Within each directive group, sort aliases/imports/requires alphabetically when doing so does not obscure meaning.
 
-- `@moduledoc` immediately after `defmodule`, separated from the next line by a blank line.
-- `@moduledoc false` for intentionally undocumented internal modules.
-- One module per file (except a module used only internally, e.g. in a test).
-- Use `__MODULE__` for self-reference; if you want a prettier name, `alias __MODULE__, as: Name`.
+Rules:
+
+* Put `@moduledoc` immediately after `defmodule`.
+* Use `@moduledoc false` for intentionally internal modules.
+* Prefer one module per file.
+* Use `__MODULE__` for self-reference.
+* If a module aliases itself only for readability, use `alias __MODULE__, as: Name`.
+
+Example:
 
 ```elixir
 defmodule MyApp.Token do
@@ -119,10 +187,12 @@ defmodule MyApp.Token do
   Token utilities.
   """
 
-  alias MyApp.User
+  alias MyApp.Accounts.User
 
-  @type t :: %__MODULE__{value: String.t()}
   defstruct [:value]
+
+  @typedoc "Parsed token."
+  @type t :: %__MODULE__{value: String.t()}
 
   @spec parse(String.t()) :: {:ok, t()} | {:error, :empty}
   def parse(""), do: {:error, :empty}
@@ -132,11 +202,20 @@ end
 
 ## Docs and Typespecs
 
-- Use Markdown heredocs; add doctests when useful (indent the `iex>` block 4 spaces under `## Examples`).
-- Put `@spec` directly before `def`, after `@doc`, with no blank line between `@spec` and `def`.
-- Define custom types near the top; pair each `@typedoc` with its `@type`, separated by a blank line.
-- Name the primary struct type `t`.
-- Split a union type that is too long across lines, each member indented one level past the type name with leading `|`.
+Use docs and specs to clarify public APIs, not to decorate obvious private helpers.
+
+Rules:
+
+* Put `@doc` before `@spec`.
+* Put `@spec` directly before `def`.
+* Do not leave a blank line between `@spec` and `def`.
+* Use Markdown heredocs for module and function docs.
+* Add doctests when they clarify behavior and are stable.
+* Name a struct's primary type `t`.
+* Put custom types near the top of the module.
+* Pair each `@typedoc` with the relevant `@type`.
+
+Example:
 
 ```elixir
 @doc """
@@ -150,53 +229,108 @@ Parses a token.
 @spec parse(String.t()) :: {:ok, t()} | {:error, :empty}
 def parse(""), do: {:error, :empty}
 def parse(value), do: {:ok, %__MODULE__{value: value}}
+```
 
+For long union types, split members across lines:
+
+```elixir
 @type result ::
         {:ok, term()}
         | {:error, :empty}
         | {:error, :invalid}
 ```
 
-## Pipelines and Expressions
+## Functions and Control Flow
 
-- Use pipelines only for **multiple** transformations; don't pipe just once.
-- Start a pipeline from a bare variable, not a function call.
-- Always use parentheses in piped calls and for zero-arity calls (`do_stuff()`), so they're distinguishable from variables.
-- Use parentheses when a `def` has arguments; omit them when it doesn't.
-- Group single-line `def`s that match the same function; separate multiline `def`s with a blank line. If you have more than one multiline `def`, don't mix in single-line `def`s.
-- Use `do:` for a simple one-line `if`.
-- Never use `unless` **with `else`** — rewrite positive-case-first as `if`. (This skill additionally prefers `if … not` over a bare `unless`; that is stricter than the official guide, which permits bare `unless` — keep or drop this house rule deliberately.)
-- Use `true` as the final catch-all in `cond` (not `:else`).
-- Omit square brackets from keyword lists when they're the last argument and optional.
+Prefer pattern matching in function heads when it makes valid input shapes clear.
+
+Prefer guards for simple type or value constraints. Keep guards side-effect-free.
+
+Use `case` when branching on one result or matching multiple result shapes.
+
+Use `with` to chain multiple fallible steps. Do not use `with` for a single clause. Include an
+`else` when the error shapes need translation. If `else` becomes complex, normalize error
+shapes near their source.
+
+Use `cond` for multiple unrelated boolean checks. Use `true` as the catch-all clause.
+
+Use `if` for simple boolean branches.
+
+Do not use `unless` with `else`. This skill also prefers `if ... not` over bare `unless` as
+a house rule, but do not claim that bare `unless` is invalid Elixir.
+
+Good:
 
 ```elixir
-# good
-sanitized =
-  raw_input
-  |> String.trim()
-  |> String.downcase()
+case HTTPClient.get(url) do
+  {:ok, %{status: 200, body: body}} -> {:ok, body}
+  {:ok, %{status: status}} -> {:error, {:unexpected_status, status}}
+  {:error, reason} -> {:error, {:http_error, reason}}
+end
+```
 
-if valid?(user), do: :ok, else: :error
-if plan not in @accessible_plans, do: disable(account_code)
-some_function(foo, bar, a: "baz", b: "qux")
+Good:
 
-# bad
-sanitized = raw_input |> String.trim()        # single pipe
-sanitized =
-  String.trim(raw_input)                       # pipeline must start from a bare variable
-  |> String.downcase()
-unless valid?(user), do: :error, else: :ok     # unless with else
-some_function(foo, bar, [a: "baz", b: "qux"])  # unneeded brackets
+```elixir
+with {:ok, user} <- fetch_user(user_id),
+     {:ok, account} <- fetch_account(user.account_id) do
+  {:ok, account}
+else
+  {:error, :not_found} -> {:error, :not_found}
+end
+```
+
+Bad:
+
+```elixir
+with {:ok, user} <- fetch_user(user_id) do
+  {:ok, user}
+end
+```
+
+## Pipelines
+
+Use pipelines for multiple transformations where each step clearly transforms the previous result.
+
+Rules:
+
+* Do not pipe once.
+* Prefer starting a pipeline from a variable or clear value.
+* Use parentheses in piped function calls.
+* Avoid pipelines that hide branching, error handling, or unrelated operations.
+* Break pipelines before they become a railway maze.
+
+Good:
+
+```elixir
+normalized =
+  attrs
+  |> trim_string_values()
+  |> downcase_email()
+  |> validate_required_fields()
+```
+
+Bad:
+
+```elixir
+normalized = attrs |> trim_string_values()
 ```
 
 ## Error Handling
 
-### Tagged tuples
-
-Use `{:ok, value}` / `{:error, reason}` for expected outcomes.
+Use tagged tuples for expected outcomes:
 
 ```elixir
-# good
+{:ok, value}
+{:error, reason}
+```
+
+Use non-bang functions when callers are expected to handle failure.
+
+Use bang functions only when failure means a bug, invalid invariant, bad setup, or unrecoverable edge condition.
+
+```elixir
+# good — returns a tagged tuple for an expected outcome
 def fetch_user(id) do
   case Repo.get(User, id) do
     nil -> {:error, :not_found}
@@ -208,37 +342,12 @@ end
 def fetch_user(id), do: Repo.get!(User, id)
 ```
 
-### `with`
+Use `try/rescue` only around code that may raise, usually third-party or boundary code. Do
+not wrap your own expected-failure logic in `try/rescue`.
 
-Use to chain multiple fallible steps. Include `else`. Don't use `with` for a single clause — use `case`. If `else` gets complex, normalize error shapes before the `with`.
-
-```elixir
-with {:ok, user} <- fetch_user(user_id),
-     {:ok, account} <- fetch_account(user.account_id) do
-  {:ok, account}
-else
-  {:error, :not_found} -> {:error, :not_found}
-end
-```
-
-### `case`
-
-Use `case` to branch on one result or match multiple shapes.
+Good:
 
 ```elixir
-case HTTPClient.get(url) do
-  {:ok, %{status: 200, body: body}} -> {:ok, body}
-  {:ok, %{status: status}} -> {:error, {:unexpected_status, status}}
-  {:error, reason} -> {:error, {:http_error, reason}}
-end
-```
-
-### `try/rescue`
-
-Only around code that may raise, usually third-party. Don't wrap your own expected-failure logic.
-
-```elixir
-# good
 def safe_decode(json) do
   {:ok, Jason.decode!(json)}
 rescue
@@ -246,30 +355,98 @@ rescue
 end
 ```
 
-### `raise`
-
-Only for programmer errors / invariant violations. Exception modules end in `Error`; messages are lowercase with no trailing punctuation.
+Raise only for programmer errors or invariant violations:
 
 ```elixir
 raise ArgumentError, "expected a non-empty list"
+```
+
+Exception messages are lowercase and have no trailing punctuation.
+
+## Data and Collections
+
+Prefer domain structs or maps over long positional argument lists.
+
+Use keyword lists for options. Use maps or structs for domain data.
+
+For required atom keys, prefer pattern matching or dot access.
+
+For optional or dynamic keys, prefer bracket access, `Map.get/3`, `Map.fetch/2`, or
+`Map.fetch!/2` depending on the failure semantics.
+
+Use:
+
+* `Map.fetch/2` when missing keys are expected and should be handled.
+* `Map.fetch!/2` when missing keys are bugs.
+* `Map.get/3` when a default is meaningful.
+
+Avoid dynamic atom creation from external input. Use `String.to_existing_atom/1` only when
+the atom set is known and already loaded.
+
+Use strict boolean operators (`and`, `or`, `not`) when operands must be booleans. Use `&&`,
+`||`, and `!` only when truthy/falsy semantics are intentional.
+
+```elixir
+enabled = is_admin and is_active  # good — not `is_admin && is_active`
+```
+
+Use `Enum` for eager collection work. Use `Stream` only for lazy, large, or infinite flows.
+
+Use `Date`, `Time`, `NaiveDateTime`, and `DateTime` instead of manual date/time arithmetic.
+
+Use `URI`, `Path`, and structured APIs instead of string concatenation for structured data.
+
+## Structs
+
+Rules:
+
+* In `defstruct`, list `nil`-default atom fields first, then keyword defaults.
+* Omit brackets when `defstruct` has only keyword defaults.
+* Keep brackets when `defstruct` includes bare atom fields.
+* Use `%__MODULE__{}` in the struct's own type.
+
+```elixir
+defstruct [:id, :name, active: true, params: []]  # brackets required — has bare atom fields
+
+@type t :: %__MODULE__{
+        id: integer() | nil,
+        name: String.t() | nil,
+        active: boolean(),
+        params: Keyword.t()
+      }
 ```
 
 ## OTP
 
 ### GenServer
 
-- Public API first, callbacks after; mark callbacks `@impl true`.
-- Expose a module API; never call `GenServer.call/cast` from outside the module.
-- `handle_call` for replies, `handle_cast` for fire-and-forget, `handle_info` for plain messages.
-- State is a map or struct, never a bare value.
-- Don't do slow I/O inside a callback — reply async (`GenServer.reply/2` from a `Task`) instead of blocking the process.
+Provide a module-level client API. Do not make callers use `GenServer.call/3` or
+`GenServer.cast/2` directly across the application.
+
+Put the public API before callbacks. Mark callbacks with `@impl true`.
+
+Use:
+
+* `handle_call/3` for calls that reply.
+* `handle_cast/2` for fire-and-forget messages.
+* `handle_info/2` for plain messages.
+
+Prefer a map or struct for GenServer state once the state has more than one concept or may
+grow. A bare value is acceptable only for tiny examples or truly single-value state.
+
+Do not perform slow I/O inside callbacks. Start supervised async work or reply later with
+`GenServer.reply/2` when appropriate.
+
+Example:
 
 ```elixir
 defmodule MyApp.Counter do
   use GenServer
 
   @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, %{count: 0}, opts)
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, %{count: 0}, opts)
+  end
 
   @spec increment(pid()) :: :ok
   def increment(pid), do: GenServer.cast(pid, :increment)
@@ -284,56 +461,43 @@ defmodule MyApp.Counter do
   def handle_call(:value, _from, state), do: {:reply, state.count, state}
 
   @impl true
-  def handle_cast(:increment, state), do: {:noreply, %{state | count: state.count + 1}}
+  def handle_cast(:increment, state) do
+    {:noreply, %{state | count: state.count + 1}}
+  end
 end
 ```
 
-### Agent / Task
+### Agent, Task, and Supervision
 
-- `Agent` only for simple shared state, never complex business workflows.
-- `Task` for one-off async work; `Task.Supervisor` when supervision matters.
+Use:
 
-```elixir
-task = Task.async(fn -> expensive_computation() end)
-result = Task.await(task, 5_000)
-```
+* `Agent` only for simple shared state.
+* `Task` for one-off async work.
+* `Task.Supervisor` when task lifecycle and supervision matter.
+* `DynamicSupervisor` for children started at runtime.
+* `Registry` for process discovery.
+* A job library, such as Oban, for durable background work, retries, and queues when the project already uses it or the user asks for that design.
 
-### Supervision
+Always supervise long-lived processes. Do not use unsupervised `spawn` for production workflows.
 
-- Always supervise long-lived processes; don't spawn unsupervised.
-- `:one_for_one` for independent workers, `:one_for_all` when children depend on each other.
-- `DynamicSupervisor` for children started at runtime; `Registry` for process discovery.
+Use `:one_for_one` for independent children and `:one_for_all` when children depend on each other.
 
-See `references/phoenix-ecto-liveview.md` for application-tree and concurrency-selection detail.
-
-## Structs and Collections
-
-- In `defstruct`, list `nil`-default atom fields first, then keyword defaults.
-- Omit the brackets when `defstruct`'s argument is a pure keyword list; brackets are **required** once there's at least one bare atom.
-- Use `%__MODULE__{}` in the struct's own type.
-- Keyword lists: `[a: 1]`. Atom-key maps: `%{a: 1}`. Mixed-key maps: verbose, atoms first: `%{:a => 1, "b" => 2}`.
-- Match strings with the concatenator, not binary patterns: `"my" <> rest = str`.
-
-```elixir
-# brackets required (has bare atoms)
-defstruct [:id, :name, active: true, params: []]
-
-# brackets omitted (pure keyword list)
-defstruct params: [], active: true
-
-@type t :: %__MODULE__{
-        id: integer() | nil,
-        name: String.t() | nil,
-        active: boolean(),
-        params: Keyword.t()
-      }
-```
+Do not put business logic in processes merely because they feel “service-like.” Use modules and functions until runtime state, concurrency, fault tolerance, or isolation is needed.
 
 ## Testing
 
-- Use `describe` blocks.
-- Expression under test on the left, expected on the right — unless the assertion is a pattern match (then `assert {:ok, x} = fun()`).
-- Prefer `setup`; use `setup_all` only when truly needed.
+Use ExUnit conventions that match the project.
+
+Prefer:
+
+* `describe` blocks around a function or behavior.
+* Clear test names describing observable behavior.
+* Expression under test on the left and expected value on the right.
+* Pattern matching assertions for tagged tuples.
+* `setup` for repeated per-test data.
+* `setup_all` only for shared expensive setup that is safe across tests.
+
+Good:
 
 ```elixir
 describe "parse/1" do
@@ -347,75 +511,124 @@ describe "parse/1" do
 end
 ```
 
+When reviewing tests, flag:
+
+* Tests that depend on order.
+* Tests that hide too much behind helpers.
+* Tests that assert implementation details instead of behavior.
+* Shared state that can leak between async tests.
+
 ## Comments
 
-- Place comments on the line above the code they describe; one space after `#`.
-- Comments longer than a word are capitalized and use sentence punctuation; limit comment lines to 100 chars.
-- Annotations are uppercase + colon + space + note: `TODO:`, `FIXME:`, `OPTIMIZE:`, `HACK:`, `REVIEW:`. Document any custom keyword in the project README.
+Prefer readable code over explanatory comments.
+
+Use comments for:
+
+* Non-obvious domain rules.
+* External constraints.
+* Intentional tradeoffs.
+* Workarounds with context.
+
+Rules:
+
+* Put comments above the code they describe.
+* Use one space after `#`.
+* Capitalize and punctuate sentence comments.
+* Use uppercase annotations: `TODO:`, `FIXME:`, `OPTIMIZE:`, `HACK:`, `REVIEW:`.
+* Document custom annotations in the project README.
+
+Good:
 
 ```elixir
-# Normalize external input before matching.
+# Normalize external input before matching on known statuses.
 attrs = normalize_attrs(attrs)
 ```
 
-## Anti-Patterns to Avoid
+## Anti-Patterns to Flag
 
-Follow the official anti-pattern docs linked at the top. The most common in generated code:
+Flag official Elixir anti-patterns, especially:
 
-### Code
+* Dynamic atom creation from external input.
+* Non-assertive map access for required keys.
+* Long parameter lists.
+* Boolean flag arguments controlling unrelated behavior.
+* Return shapes that vary by option.
+* Complex `else` blocks in `with`.
+* Exceptions for expected failures.
+* Overuse of comments to compensate for unclear code.
+* Large GenServer state.
+* Slow I/O inside GenServer callbacks.
+* Sending unnecessary data between processes.
+* Processes used only for code organization.
+* Unsafely broad `try/rescue`.
+* Macros where functions or data would work.
 
-```elixir
-String.to_atom(user_input)        # bad — unbounded atom table (DoS)
-String.to_existing_atom(user_input)  # good
-
-user[:id]                         # bad for required keys — silent nil
-user.id                           # good — raises on a real bug
-
-enabled = is_admin && is_active   # bad — use strict boolean operators
-enabled = is_admin and is_active  # good
-
-create_user(name, email, role, active, confirmed)  # bad — positional soup
-create_user(%{name: name, email: email, role: role})  # good
-```
-
-### Design
-
-- Don't vary the return shape via options; use separate functions (`fetch_user/1` vs `fetch_user_map/1`).
-- Avoid many boolean flags; prefer a single atom option.
-- Avoid primitive obsession; model domain concepts as structs/maps.
-- Don't raise for expected failures.
-
-### Process / OTP
-
-- Avoid large GenServer state and slow I/O in callbacks.
-- Don't use processes purely for code organization.
-- Pass only needed fields in messages.
-- Don't wrap everything in defensive `try/rescue`.
+Examples:
 
 ```elixir
-# bad — blocks the GenServer on slow I/O
-def handle_call(:sync_remote, _from, state) do
-  {:reply, HTTPClient.get!("https://example.com/slow"), state}
-end
+# Bad for required keys
+user[:id]
 
-# better — reply asynchronously
-def handle_call(:sync_remote, from, state) do
-  Task.start(fn -> GenServer.reply(from, HTTPClient.get!("https://example.com/slow")) end)
-  {:noreply, state}
-end
+# Good when missing :id is a bug
+user.id
 ```
 
-### Metaprogramming
+```elixir
+# Bad
+create_user(name, email, role, active, confirmed)
 
-- Prefer functions over macros; avoid macros unless clearly necessary.
-- Don't generate at runtime what could be generated at compile time.
+# Better
+create_user(%{
+  name: name,
+  email: email,
+  role: role
+})
+```
 
-## Tooling
+## Phoenix, Ecto, and LiveView
+
+When the task touches Phoenix, Ecto, LiveView, controllers, contexts, schemas, migrations,
+queries, changesets, PubSub, or application supervision trees, read:
+
+`references/phoenix-ecto-liveview.md`
+
+Use that reference for framework-specific boundaries, security checks, lifecycle rules,
+migrations, Ecto query/write patterns, and supervision selection.
+
+## Verification
+
+When project files are available and commands are allowed, prefer this gate:
 
 ```sh
 mix format --check-formatted
+mix compile --warnings-as-errors
 mix credo --strict
-mix dialyzer
 mix test
-mix docs
+mix dialyzer
 ```
+
+Adapt the gate to the project:
+
+* If Credo is not installed, skip it and say so.
+* If Dialyzer is not configured, skip it and say so.
+* If tests are expensive, run the narrowest relevant tests first.
+* If changing docs or public APIs, consider `mix docs` when ExDoc is configured.
+* Do not invent tooling setup unless the user asks.
+
+When commands cannot be run, provide the commands the user should run and clearly label the review as static.
+
+## Output Style
+
+When generating or refactoring code:
+
+* Return the final code first when the user asks for code.
+* Explain only the important choices after the code.
+* Keep explanations specific to the code, not generic Elixir lectures.
+* Mention any assumptions.
+
+When reviewing code:
+
+* Prioritize actionable findings.
+* Avoid noisy style nitpicks unless the user asks for a strict style review.
+* Include replacement snippets for high-value changes.
+* Distinguish official guidance from project or house style.
