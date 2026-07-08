@@ -1,6 +1,7 @@
 ---
 name: ast-grep-find
-description: use ast-grep for structural code search before falling back to ripgrep or plain text search. apply when locating functions, calls, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, refactor targets, or any code pattern where syntax-aware matching is more reliable than text matching.
+description: |
+    Use this skill whenever possible for structural code search before using grep/rigrep or similar plain text search. apply when locating functions, calls, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, refactor targets, or any code pattern where syntax-aware matching is more reliable than text matching.
 ---
 
 # ast-grep-find
@@ -17,6 +18,19 @@ Reach for `ast-grep` before `rg` when searching for:
 - repeated subexpressions such as `$A == $A` or `$OBJ.$METHOD($$$ARGS)`
 
 Use `rg` only when the target is not code syntax, such as comments, prose, configuration strings, generated text, log messages, filenames, or when `ast-grep` is unavailable or cannot parse the language.
+
+## Rule development workflow (dump → test → scan)
+
+For anything beyond a trivial one-line pattern, iterate on a small snippet before scanning the whole tree:
+
+1. **Dump** the AST of a representative snippet to learn node kinds and structure:
+   `ast-grep run --pattern '<snippet>' -l <lang> --debug-query=cst`
+2. **Draft** a pattern or YAML rule targeting those kinds.
+3. **Test** the rule against the snippet via stdin — no temp file, no full scan:
+   `printf '%s' '<snippet>' | ast-grep scan --inline-rules '<yaml>' --json --stdin`
+   If it does not match, remove sub-rules until it does, then add them back one at a time. For `inside`/`has`, add `stopBy: end`.
+4. **Scan** the codebase only once the rule matches the snippet:
+   `ast-grep scan --inline-rules '<yaml>' <path>`
 
 ## First checks
 
@@ -44,14 +58,27 @@ Useful flags:
 # show context around matches
 ast-grep -p '<pattern>' -l <lang> -C 3 <path>
 
-# output structured results for machine inspection
+# structured results, human-readable (small result sets)
 ast-grep -p '<pattern>' -l <lang> --json=pretty <path>
+
+# structured results, one JSON object per line — memory-efficient for large codebases
+ast-grep -p '<pattern>' -l <lang> --json=stream <path>
 
 # restrict or exclude files
 ast-grep -p '<pattern>' -l <lang> --globs 'src/**/*.ts' --globs '!**/*.test.ts' .
+```
 
-# inspect how the pattern is parsed
-ast-grep -p '<pattern>' -l <lang> --debug-query=ast
+Three `--debug-query` formats (all require `-l`):
+
+```bash
+# pattern: how ast-grep parses your PATTERN — debug why a pattern is too broad/narrow
+ast-grep -p '<pattern>' -l <lang> --debug-query=pattern
+
+# cst: concrete syntax tree of TARGET code, incl. punctuation — debug why code won't match
+ast-grep -p '<target code>' -l <lang> --debug-query=cst
+
+# ast: named nodes only — a cleaner view for discovering node kinds
+ast-grep -p '<target code>' -l <lang> --debug-query=ast
 ```
 
 Omit `-l` only when extension-based language inference is likely to be correct. Include `-l` when using stdin, mixed-language folders, ambiguous extensions, or debugging a pattern.
@@ -99,18 +126,17 @@ ast-grep -p '<$COMP disabled={true} $$$PROPS />' -l tsx src
 
 Use a YAML rule when a one-line pattern is too broad, when constraints are needed, or when the search will be reused.
 
-Create a temporary rule file outside the source tree or in a scratch location:
+Prefer `--inline-rules` for one-off searches — no temp file to create or clean up:
 
-```yaml
+```bash
+ast-grep scan --inline-rules '
 id: find-console-log
 language: TypeScript
 rule:
-  pattern: console.log($$$ARGS)
-message: found console.log
-severity: info
+  pattern: console.log($$$ARGS)' .
 ```
 
-Run it:
+Write a `.yml` file (and run with `--rule`) only when the rule is genuinely reusable or lives in an ast-grep project:
 
 ```bash
 ast-grep scan --rule /tmp/find-console-log.yml .
@@ -155,11 +181,24 @@ When results are wrong or empty:
 1. Add `-l <lang>` if omitted.
 2. Verify the pattern is valid code for that language.
 3. Add surrounding syntax context instead of using a fragment that the parser cannot parse.
-4. Run `--debug-query=ast` to inspect how the pattern is parsed.
+4. Run `--debug-query=pattern` to see how the pattern parsed, or `--debug-query=cst` on the target code to see what you must match.
 5. Replace concrete code with metavariables one piece at a time.
 6. Use `$$$ARGS` or `$$$BODY` when the number of nodes can vary.
-7. Use a YAML rule with `constraints`, `kind`, `inside`, `has`, `precedes`, `follows`, `any`, `all`, or `not` when structure matters beyond a single pattern.
-8. Only fall back to `rg` after trying a syntax-aware search and explaining why text search is more suitable.
+7. For a relational rule (`inside`, `has`, `precedes`, `follows`) that returns nothing, add `stopBy: end` — by default the search stops at the immediate neighbor, so a deeper match is missed. This is the single most common cause of empty relational-rule results.
+8. When a bare pattern is ambiguous or won't parse as a fragment, use the pattern object form to disambiguate:
+
+   ```yaml
+   rule:
+     pattern:
+       context: 'class C { $F }'   # surrounding code so the parser sees the right node
+       selector: field_definition  # which node in the context is the actual matcher
+       strictness: smart           # cst | smart | ast | relaxed | signature
+   ```
+
+9. Use a YAML rule with `constraints`, `kind`, `inside`, `has`, `precedes`, `follows`, `any`, `all`, or `not` when structure matters beyond a single pattern.
+10. Only fall back to `rg` after trying a syntax-aware search and explaining why text search is more suitable.
+
+Note: `ast-grep` exits with code 1 when there are simply no matches — that is not an error.
 
 ## Reporting results to the user
 
