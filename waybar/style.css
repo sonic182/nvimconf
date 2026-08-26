@@ -1,15 +1,39 @@
+/* Palette adapted from the BMW E46/autumn-leaves wallpaper:
+   warm dark brown base, amber-orange leaf accent, deep maroon car accent.
+   All colors live here — no literal colors below this block. */
+@define-color bar-bg #1e1a1b;
+@define-color right-bg #1e1a1b;
+@define-color right-border #9e5c6a;
+@define-color fg #f2e9de;
+@define-color text #ffffff;
+@define-color accent #df6124;
+@define-color accent2 #8a1f2b;
+@define-color accent3 #4a1017;
+
+@define-color kitty-bg #2a2a2a;
+@define-color chromium-bg #000000;
+@define-color focus-bg #000000;
+@define-color mode-bg #4b5561;
+@define-color urgent-bg #b22222;
+@define-color charging-fg #5AA460;
+@define-color critical-blink-bg #888888;
+@define-color language-fg #5a0650;
+@define-color keyboard-locked-bg rgba(0, 0, 0, 0.3);
+@define-color scratchpad-bg rgba(0, 0, 0, 0.4);
+
 * {
     /* `otf-font-awesome` is required to be installed for icons */
-    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-family: "JetBrainsMono Nerd Font Propo", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
     font-size: 13px;
     font-weight: bold;
+    transition: background-color .3s ease-out;
 }
 
 window#waybar {
-    background-color: rgba(7, 0, 43, 0.6);
+    background-color: @bar-bg;
     /*border-bottom: 3px solid #4a4a4a;*/
     /*border-bottom: 3px solid rgba(60, 65, 70, 0.8); */
-    color: #eeeeee;
+    color: @fg;
     /*font-weight: bold;*/
 
     transition-property: background-color;
@@ -25,16 +49,16 @@ window#waybar.empty {
     background-color: transparent;
 }
 window#waybar.solo {
-    background-color: #FFFFFF;
+    background-color: @text;
 }
 */
 
 window#waybar.kitty {
-    background-color: #2a2a2a;
+    background-color: @kitty-bg;
 }
 
 window#waybar.chromium {
-    background-color: #000000;
+    background-color: @chromium-bg;
     border: none;
 }
 
@@ -48,7 +72,7 @@ button {
 
 button:hover {
     background: inherit;
-    box-shadow: inset 0 -3px #ffffff;
+    box-shadow: inset 0 -3px @text;
 }
 
 /* Module hover effect */
@@ -56,28 +80,40 @@ button:hover {
     /*background-color: #7c6000;*/
 }
 
+#workspaces {
+    background-color: @right-bg;
+    margin: 4px 4px;
+    padding: 2px;
+    border-radius: 8px;
+}
+
 #workspaces button {
-    padding: 0 5px;
+    padding: 2px 6px;
+    margin: 1px;
     background-color: transparent;
-    color: #ffffff;
+    color: @text;
+    border-radius: 6px;
 }
 
 #workspaces button:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: @accent;
+    color: @text;
 }
 
-#workspaces button.focused {
-    background-color: #4b5561;
-    box-shadow: inset 0 -3px #ffffff;
+#workspaces button.focused,
+#workspaces button.active {
+    background-color: @accent3;
+    color: @fg;
+    box-shadow: none;
 }
 
 #workspaces button.urgent {
-    background-color: #b22222;
+    background-color: @urgent-bg;
 }
 
 #mode {
-    background-color: #4b5561;
-    box-shadow: inset 0 -3px #ffffff;
+    background-color: @mode-bg;
+    box-shadow: inset 0 -3px @text;
 }
 
 #clock,
@@ -91,6 +127,8 @@ button:hover {
 #pulseaudio,
 #wireplumber,
 #custom-media,
+#custom-codexbar,
+#custom-power,
 #tray,
 #mode,
 #idle_inhibitor,
@@ -98,10 +136,13 @@ button:hover {
 #power-profiles-daemon,
 #mpd {
     padding: 4px 8px;
-    color: #eeeeee;
-    border: 1px solid white;
+    color: @fg;
+    border: none;
+    border-bottom: 1px solid @right-border;
     border-radius: 8px;
-    margin: 0px 4px;
+    background-color: @right-bg;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    margin: 4px 4px;
 }
 
 #window,
@@ -119,27 +160,46 @@ button:hover {
     margin-right: 0;
 }
 
+/* Square corners for all modules on the right side of the bar */
+.modules-right #clock,
+.modules-right #battery,
+.modules-right #cpu,
+.modules-right #memory,
+.modules-right #disk,
+.modules-right #temperature,
+.modules-right #backlight,
+.modules-right #network,
+.modules-right #pulseaudio,
+.modules-right #wireplumber,
+.modules-right #custom-media,
+.modules-right #custom-codexbar,
+.modules-right #tray,
+.modules-right #power-profiles-daemon,
+.modules-right #mpd {
+    border-radius: 0;
+}
+
 #clock {
 }
 
 #battery {
-    color: #ffffff;
+    color: @text;
 }
 
 #battery.charging, #battery.plugged {
-    color: #5AA460;
+    color: @charging-fg;
 }
 
 @keyframes blink {
     to {
-        background-color: #888888;
-        color: #ffffff;
+        background-color: @critical-blink-bg;
+        color: @text;
     }
 }
 
 /* Using steps() as a timing function to limit CPU usage */
 #battery.critical:not(.charging) {
-    color: #ffffff;
+    color: @text;
     animation-name: blink;
     animation-duration: 0.5s;
     animation-timing-function: steps(12);
@@ -152,23 +212,23 @@ button:hover {
 }
 
 #power-profiles-daemon.performance {
-    color: #ffffff;
+    color: @text;
 }
 
 #power-profiles-daemon.balanced {
-    color: #ffffff;
+    color: @text;
 }
 
 #power-profiles-daemon.power-saver {
-    color: #ffffff;
+    color: @text;
 }
 
 label:focus {
-    background-color: #000000;
+    background-color: @focus-bg;
 }
 
 #cpu {
-    color: #ffffff;
+    color: @text;
 }
 
 #memory {
@@ -187,22 +247,22 @@ label:focus {
 }
 
 #pulseaudio {
-    color: #ffffff;
+    color: @text;
 }
 
 #pulseaudio.muted {
-    color: #ffffff;
+    color: @text;
 }
 
 #wireplumber {
-    color: #ffffff;
+    color: @text;
 }
 
 #wireplumber.muted {
 }
 
 #custom-media {
-    color: #ffffff;
+    color: @text;
     min-width: 100px;
 }
 
@@ -233,11 +293,11 @@ label:focus {
 }
 
 #idle_inhibitor.activated {
-    color: #ffffff;
+    color: @text;
 }
 
 #mpd {
-    color: #ffffff;
+    color: @text;
 }
 
 #mpd.disconnected {
@@ -250,14 +310,14 @@ label:focus {
 }
 
 #language {
-    color: #5a0650;
+    color: @language-fg;
     padding: 0 5px;
     margin: 0 5px;
     min-width: 16px;
 }
 
 #keyboard-state {
-    color: #ffffff;
+    color: @text;
     padding: 0 0px;
     margin: 0 5px;
     min-width: 16px;
@@ -268,11 +328,11 @@ label:focus {
 }
 
 #keyboard-state > label.locked {
-    background: rgba(0, 0, 0, 0.3);
+    background: @keyboard-locked-bg;
 }
 
 #scratchpad {
-    background: rgba(0, 0, 0, 0.4);
+    background: @scratchpad-bg;
 }
 
 #scratchpad.empty {
@@ -285,7 +345,7 @@ label:focus {
 
 #privacy-item {
     padding: 0 5px;
-    color: #ffffff;
+    color: @text;
 }
 
 #privacy-item.screenshare {
