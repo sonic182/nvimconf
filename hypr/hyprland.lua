@@ -41,6 +41,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
     hl.exec_cmd("systemctl --user start elephant.service")
     hl.exec_cmd("swaybg -m fill -i " .. os.getenv("HOME") .. "/.config/hypr/wallpaper.jpg")
+    hl.exec_cmd("hypridle")
 
     -- work pc
     -- hl.exec_cmd("waybar & dunst & slack & thunderbird & brave")
