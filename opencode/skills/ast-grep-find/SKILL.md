@@ -52,6 +52,27 @@ Use `ast-grep run` implicitly or explicitly for quick lookups:
 ast-grep -p '<pattern>' -l <lang> <path>
 ```
 
+### Elixir function heads
+
+Elixir function definitions with guards have a different AST shape from
+unguarded definitions. A pattern such as `def name($$$ARGS) do $$$BODY end`
+does **not** match `def name($$$ARGS) when $COND do $$$BODY end`; include the
+guard in the pattern instead:
+
+```bash
+# Broad guarded definitions
+ast-grep -p 'def $NAME($$$ARGS) when $COND do $$$BODY end' -l elixir lib
+
+# Exact guarded function, including multiline heads/default arguments
+ast-grep -p 'def append_external_outbound_message($$$ARGS) when $COND do $$$BODY end' \
+  -l elixir lib/athena/communications.ex
+```
+
+If a function may be guarded or unguarded, run both structural patterns (or use
+an `any` YAML rule). Do not fall back to text search merely because an
+unguarded `def` pattern returned no matches; first inspect the function head
+with `--debug-query=cst` or try the guarded form.
+
 Useful flags:
 
 ```bash
