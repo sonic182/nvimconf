@@ -29,7 +29,8 @@ end
 
 local terminal = "kitty"
 local fileManager = "nautilus"
-local menu = "walker"
+-- local menu = "walker"
+local menu = [[tofi-run | xargs -I{} hyprctl dispatch 'hl.dsp.exec_cmd("{}")']]
 
 -------------------
 ---- AUTOSTART ----
@@ -40,7 +41,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
     hl.exec_cmd("systemctl --user start elephant.service")
     hl.exec_cmd("swaybg -m fill -i " .. os.getenv("HOME") .. "/.config/hypr/wallpaper.jpg")
-    hl.exec_cmd("waybar & dunst & slack & thunderbird & brave")
+
+    -- work pc
+    -- hl.exec_cmd("waybar & dunst & slack & thunderbird & brave")
+
+    hl.exec_cmd("waybar & dunst")
 end)
 
 -------------------------------

@@ -1,7 +1,7 @@
 ---
 name: ast-grep-find
 description: |
-    Use this skill whenever possible for structural code search before using grep/rigrep or similar plain text search. apply when locating functions, calls, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, refactor targets, or any code pattern where syntax-aware matching is more reliable than text matching.
+    It is a must to use ast-grep when code search — use this skill before reaching for grep/ripgrep or similar plain text search. Apply when locating functions, calls, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, refactor targets, or any code pattern where syntax-aware matching is more reliable than text matching.
 ---
 
 # ast-grep-find
