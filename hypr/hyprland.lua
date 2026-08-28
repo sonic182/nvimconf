@@ -6,31 +6,29 @@
 ---- MONITORS ----
 ------------------
 
--- If ~/.config/hypr/monitors.lua exists, load it. Otherwise use a safe
--- preferred-mode/automatic-position fallback. The old monitors.conf was not
--- included in the supplied config, so its exact layout could not be migrated.
-local monitors_loaded = pcall(require, "monitors")
-if not monitors_loaded then
-    hl.monitor({
-        output = "",
-        mode = "preferred",
-        position = "auto",
-        scale = "auto",
-    })
-end
-
--- Examples migrated from the comments in the old config:
--- hl.monitor({ output = "eDP-1", mode = "2560x1600@240", position = "0x0", scale = 1.0 })
--- hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@60", position = "0x0", scale = 1.0 })
+hl.monitor({
+    output = "",
+    mode = "preferred",
+    position = "auto",
+    scale = "auto",
+})
 
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
 
+local helpers = require("helpers")
+
 local terminal = "kitty"
 local fileManager = "nautilus"
--- local menu = "walker"
-local menu = [[tofi-run | xargs -I{} hyprctl dispatch 'hl.dsp.exec_cmd("{}")']]
+
+-- Auto-detect an app launcher: first binary found wins, in this priority order.
+local menu = helpers.detect_menu({
+    { bin = "walker", cmd = "walker" },
+    { bin = "tofi", cmd = [[tofi-run | xargs -I{} hyprctl dispatch 'hl.dsp.exec_cmd("{}")']] },
+})
+
+local isWorkPc = helpers.is_work_pc()
 
 -------------------
 ---- AUTOSTART ----
@@ -43,10 +41,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("swaybg -m fill -i " .. os.getenv("HOME") .. "/.config/hypr/wallpaper.jpg")
     hl.exec_cmd("hypridle")
 
-    -- work pc
-    -- hl.exec_cmd("waybar & dunst & slack & thunderbird & brave")
-
-    hl.exec_cmd("waybar & dunst")
+    if isWorkPc then
+        hl.exec_cmd("waybar & dunst & slack & thunderbird & brave")
+    else
+        hl.exec_cmd("waybar & dunst")
+    end
 end)
 
 -------------------------------
