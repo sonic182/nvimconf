@@ -2,9 +2,19 @@
 
 local M = {}
 
+-- os.execute's exit status is unreliable inside Hyprland's embedded Lua
+-- (its SIGCHLD reaping races with Lua's waitpid, so os.execute always
+-- returns nil/"No child processes"). Use io.popen and check for output
+-- instead, since that only reads the pipe and doesn't depend on the
+-- collected exit status.
 function M.bin_exists(bin)
-    local ok = os.execute("command -v " .. bin .. " >/dev/null 2>&1")
-    return ok == true or ok == 0
+    local handle = io.popen("command -v " .. bin .. " 2>/dev/null")
+    if not handle then
+        return false
+    end
+    local result = handle:read("l")
+    handle:close()
+    return result ~= nil and result ~= ""
 end
 
 -- Auto-detect an app launcher: first binary found wins, in priority order.
