@@ -52,6 +52,18 @@ Use `ast-grep run` implicitly or explicitly for quick lookups:
 ast-grep -p '<pattern>' -l <lang> <path>
 ```
 
+### Typed TypeScript functions
+
+A function pattern without a return annotation does not match a typed declaration. Include it:
+
+```bash
+# Matches: export function createThing(input: Input): Output { ... }
+ast-grep -p 'export function $NAME($$$ARGS): $RETURN { $$$BODY }' -l ts src
+
+# Matches async functions returning Promise<...>
+ast-grep -p 'async function $NAME($$$ARGS): $RETURN { $$$BODY }' -l ts src
+```
+
 ### Elixir function heads
 
 Elixir function definitions with guards have a different AST shape from
@@ -195,6 +207,14 @@ severity: warning
 
 Do not prefix YAML `files` or `ignores` entries with `./`; make them relative to the ast-grep project root.
 
+### Switch cases need context
+
+A `case` clause is not a complete TypeScript program, so give it a `switch` context:
+
+```bash
+ast-grep -p 'switch ($VALUE) { case $CASE: $$$BODY }' -l ts src
+```
+
 ## Refinement loop
 
 When results are wrong or empty:
@@ -219,7 +239,7 @@ When results are wrong or empty:
 9. Use a YAML rule with `constraints`, `kind`, `inside`, `has`, `precedes`, `follows`, `any`, `all`, or `not` when structure matters beyond a single pattern.
 10. Only fall back to `rg` after trying a syntax-aware search and explaining why text search is more suitable.
 
-Note: `ast-grep` exits with code 1 when there are simply no matches — that is not an error.
+Note: `ast-grep` exits with code 1 when there are simply no matches — that is not an error. For independent searches in one shell command, use separate commands, `;`, or `|| true`; `&&` stops at the first valid no-match.
 
 ## Reporting results to the user
 

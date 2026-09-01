@@ -6,18 +6,35 @@
 ---- MONITORS ----
 ------------------
 
+local helpers = require("helpers")
+
+if helpers.is_work_pc() then
+    hl.monitor({
+        output = "eDP-1",
+        mode = "2560x1600@240",
+        position = "0x0",
+        scale = 1.25,
+    })
+    hl.monitor({
+        output = "HDMI-A-1",
+        mode = "3840x2160@60",
+        -- eDP-1 is 2560/1.25 = 2048 logical px wide
+        position = "2048x0",
+        scale = 1.25,
+    })
+end
+
+-- Fallback for any unmatched host/output: best resolution, stacked rightwards.
 hl.monitor({
     output = "",
-    mode = "preferred",
-    position = "auto",
-    scale = "auto",
+    mode = "highres",
+    position = "auto-right",
+    scale = 1.25,
 })
 
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
-
-local helpers = require("helpers")
 
 local terminal = "kitty"
 local fileManager = "nautilus"
