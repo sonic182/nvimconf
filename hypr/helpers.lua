@@ -32,4 +32,9 @@ function M.is_work_pc()
     return io.popen("hostname"):read("l") == "eliminapro"
 end
 
+-- Personal laptop is identified by hostname; adjust if it ever changes.
+function M.is_personal_pc()
+    return io.popen("hostname"):read("l") == "sonic182-nh5070ra"
+end
+
 return M

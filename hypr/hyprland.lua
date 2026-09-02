@@ -22,6 +22,9 @@ if helpers.is_work_pc() then
         position = "2048x0",
         scale = 1.25,
     })
+elseif helpers.is_personal_pc() then
+    hl.monitor({ output = "eDP-1", mode = "1920x1080@120", position = "0x0", scale = 1.0 })
+    hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@60", position = "1920x0", scale = 1.0 })
 end
 
 -- Fallback for any unmatched host/output: best resolution, stacked rightwards.
