@@ -1,5 +1,5 @@
 ---
-name: address-review
+name: address-review-gh
 description: Fetch and address inline PR review comments on the current GitHub pull request by reading the affected files, applying targeted fixes, following project conventions, and summarizing resolved and unresolved items.
 ---
 
