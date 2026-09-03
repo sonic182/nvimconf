@@ -11,9 +11,22 @@ Personal dotfiles: Neovim config plus the rest of my Hyprland-based Linux deskto
 - **dunst/** — Dunst notification daemon config (`dunstrc`).
 - **kitty/** — Kitty terminal config.
 - **agents/** — Shared instructions for AI coding agents (e.g. `agents/common/brevity.md`).
-- **opencode/** — [opencode](https://opencode.ai) config: custom agents (PR reviewers, SEO agents), skills, tools, and its own `opencode.jsonc`.
+- **skills/** — Agent skills (PR reviewers, Elixir/Python development, ast-grep search, etc.), installable standalone via `npx skills` (see [Skills](#skills)).
+- **opencode/** — [opencode](https://opencode.ai) config: tools and its own `opencode.jsonc`.
 - **.tmux.conf.local** — tmux config override.
 
 ## Usage
 
 Each folder generally mirrors the target config location (e.g. `nvim/` → `~/.config/nvim`, `greetd/` → `/etc/greetd`). Check each subfolder's own `deps.sh`/`deps_install.sh`/README where present before copying/symlinking into place.
+
+## Skills
+
+Install skills from `skills/` into any project with the `skills` CLI:
+
+```sh
+# list available skills
+npx skills add sonic182/nvimconf/ --list
+
+# install one
+npx skills add sonic182/nvimconf/ --skill elixir-development
+```
