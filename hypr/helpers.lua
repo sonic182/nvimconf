@@ -37,4 +37,17 @@ function M.is_personal_pc()
     return io.popen("hostname"):read("l") == "sonic182-nh5070ra"
 end
 
+-- Match a currently connected external monitor (i.e. not eDP-1) against
+-- known profiles keyed by its EDID description (stable across ports/docks).
+-- Returns the profile and its live output name, or nil if none matched --
+-- callers should fall back to a generic monitor rule in that case.
+function M.match_external_monitor(profiles)
+    for _, monitor in ipairs(hl.get_monitors()) do
+        if monitor.name ~= "eDP-1" and profiles[monitor.description] then
+            return profiles[monitor.description], monitor.name
+        end
+    end
+    return nil, nil
+end
+
 return M

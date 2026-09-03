@@ -8,9 +8,7 @@
     // Choose the order of the modules
     "modules-left": [
         "hyprland/workspaces",
-        "hyprland/submap",
-        "hyprland/scratchpad",
-        "custom/media"
+        "hyprland/submap"
     ],
     "modules-center": [
         "hyprland/window",
@@ -29,6 +27,7 @@
         //"hyprland/language",
         "battery",
         //"battery#bat2",
+        "custom/codexbar",
         "clock",
         "tray",
         "custom/power"
@@ -72,13 +71,6 @@
         "max-length": 8,
         "tooltip": false
     },
-    //"sway/scratchpad": {
-    //    "format": "{icon} {count}",
-    //    "show-empty": false,
-    //    "format-icons": ["", ""],
-    //    "tooltip": true,
-    //    "tooltip-format": "{app}: {title}"
-    //},
     "mpd": {
         "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ⸨{songPosition}|{queueLength}⸩ {volume}% ",
         "format-disconnected": "Disconnected ",
@@ -198,17 +190,13 @@
         },
         "on-click": "pavucontrol"
     },
-    "custom/media": {
-        "format": "{icon} {}",
+    "custom/codexbar": {
+        "exec": "$HOME/.config/waybar/codexbar-waybar.sh",
         "return-type": "json",
-        "max-length": 40,
-        "format-icons": {
-            "spotify": "",
-            "default": "🎜"
-        },
-        "escape": true,
-        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // Script in resources folder
-        // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+        "interval": 300,
+        "signal": 12,
+        "tooltip": true,
+        "on-click": "xdg-open https://chatgpt.com/codex/settings/usage"
     },
     "custom/power": {
       "format" : "⏻ ",

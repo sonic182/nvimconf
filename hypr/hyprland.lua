@@ -8,22 +8,32 @@
 
 local helpers = require("helpers")
 
+local function laptop_monitor(mode, scale)
+    hl.monitor({ output = "eDP-1", mode = mode, position = "0x0", scale = scale })
+end
+
 if helpers.is_work_pc() then
-    hl.monitor({
-        output = "eDP-1",
-        mode = "2560x1600@240",
-        position = "0x0",
-        scale = 1.25,
-    })
-    hl.monitor({
-        output = "HDMI-A-1",
-        mode = "3840x2160@60",
-        -- eDP-1 is 2560/1.25 = 2048 logical px wide
-        position = "2048x0",
-        scale = 1.25,
-    })
+    laptop_monitor("2560x1600@240", 1.25)
+
+    -- External monitors seen at the office, keyed by EDID description
+    -- (stable across ports/docks). Unrecognized monitors fall through to
+    -- the generic highres rule below.
+    local external_profiles = {
+        ["Dell Inc. DELL P2421D JY7WQ33"] = { scale = 1 },
+    }
+    local profile, output = helpers.match_external_monitor(external_profiles)
+
+    if profile then
+        hl.monitor({
+            output = output,
+            mode = profile.mode or "preferred",
+            -- eDP-1 is 2560/1.25 = 2048 logical px wide
+            position = "2048x0",
+            scale = profile.scale,
+        })
+    end
 elseif helpers.is_personal_pc() then
-    hl.monitor({ output = "eDP-1", mode = "1920x1080@120", position = "0x0", scale = 1.0 })
+    laptop_monitor("1920x1080@120", 1.0)
     hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@60", position = "1920x0", scale = 1.0 })
 end
 
