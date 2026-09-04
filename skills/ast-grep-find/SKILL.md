@@ -19,6 +19,42 @@ Reach for `ast-grep` before `rg` when searching for:
 
 Use `rg` only when the target is not code syntax, such as comments, prose, configuration strings, generated text, log messages, filenames, or when `ast-grep` is unavailable or cannot parse the language.
 
+## Outline: cheap navigation before reading whole files
+
+Before reading a large unfamiliar file or directory end to end, run `ast-grep outline` first. It lists imports, exports, classes, functions, and members without dumping full source, so the far more expensive full read only happens for the parts that matter.
+
+```bash
+# single file: shows local structure (functions, types, classes) with line numbers
+ast-grep outline src/queue.ts
+
+# directory: defaults to exports per file — a map of the public surface
+ast-grep outline src
+
+# only exported symbols matching a name
+ast-grep outline src --items exports --match 'Webhook'
+
+# only certain symbol kinds
+ast-grep outline src --type class,function
+
+# richer output: signatures plus member digests
+ast-grep outline src/queue.ts --view expanded
+```
+
+Typical directory output (`ast-grep outline src`):
+
+```
+src/db.ts
+struct: Db
+function: createDatabasePool, applyMigrations, createDb
+
+src/api/errors.ts
+class: ApiError
+function: apiNotFound, createApiErrorHandler
+constant: badRequest, unauthorized, notFound, conflict
+```
+
+Use this as the first move when exploring an unfamiliar repo or module, then open only the specific functions/classes the task touches — not every file in the directory.
+
 ## Rule development workflow (dump → test → scan)
 
 For anything beyond a trivial one-line pattern, iterate on a small snippet before scanning the whole tree:
@@ -240,6 +276,44 @@ When results are wrong or empty:
 10. Only fall back to `rg` after trying a syntax-aware search and explaining why text search is more suitable.
 
 Note: `ast-grep` exits with code 1 when there are simply no matches — that is not an error. For independent searches in one shell command, use separate commands, `;`, or `|| true`; `&&` stops at the first valid no-match.
+
+## Blast radius before refactoring an API
+
+Before changing a function, class, or module's public shape, search for its call sites and tests first, and report counts before touching anything:
+
+```bash
+ast-grep -p 'new WebhookService($$$ARGS)' -l ts .
+ast-grep -p '$X.webhookService.$METHOD($$$ARGS)' -l ts .
+ast-grep -p 'import { WebhookService } from $MOD' -l ts .
+```
+
+Report what was found (e.g. "3 instantiations, 12 callers of `deliverWebhook`, referenced in `webhook.service.test.ts`") before editing, so scope is known up front instead of discovered mid-refactor.
+
+## Large migrations: classify variants, then codemod
+
+For an API/framework migration touching many call sites:
+
+1. Search broadly for the old API and count matches.
+2. Group matches into structural variants (differing arg shapes, wrapped vs. bare calls, etc.) — a broad pattern plus a look at the matched snippets is usually enough.
+3. Write the smallest `--rewrite` or YAML `fix` rule for the dominant variant; verify it against a representative snippet via stdin (see the dump → test → scan workflow above) before running it on the tree.
+4. Apply with `--interactive` for review, or `--update-all` only once the rule is verified and the user has approved bulk changes.
+5. Repeat per variant. Handle the small number of leftover/irregular cases by hand rather than forcing one rule to cover everything.
+
+Prefer one verified deterministic rule applied to hundreds of matches over hand-editing each one — but never skip the verify-on-a-snippet step; an unverified rewrite rule applied with `--update-all` is how a migration turns into a rescue operation.
+
+## Verify a change is actually complete
+
+When a task's success condition is "no more occurrences of X" (e.g. "replace every direct `process.env` access with the config module", "route all webhook delivery through `deliverWebhook()`"), rerun the original search pattern after the edit and confirm it returns zero matches:
+
+```bash
+ast-grep -p 'process.env.$VAR' -l ts src/
+```
+
+Zero matches is the verifiable postcondition — don't rely on the diff looking complete or on having "gotten all of them" during editing.
+
+## Reusable rule as an architecture guard
+
+When a structural constraint should hold going forward (not just for one cleanup), write it as a named YAML rule with `severity: error` and check it with `ast-grep scan` alongside the project's normal verification (typecheck, lint, tests) rather than a one-off search — see the YAML rule examples above for the shape.
 
 ## Reporting results to the user
 
