@@ -1,0 +1,14 @@
+{
+  "lsp": {
+    "disabledServers": ["elixir", "expert"],
+    "servers": {
+      "dexter": {
+        "name": "Dexter",
+        "extensions": [".ex", ".exs", ".eex", ".heex"],
+        "command": "dexter",
+        "args": ["lsp"],
+        "rootMarkers": [".dexter/dexter.db", ".git", "mix.exs"]
+      }
+    }
+  }
+}
