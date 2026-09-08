@@ -1,6 +1,7 @@
 {
+  "tests": { "enabled": false },
   "lsp": {
-    "disabledServers": ["elixir", "expert"],
+    "disabledServers": ["expert"],
     "servers": {
       "dexter": {
         "name": "Dexter",
