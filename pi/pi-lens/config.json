@@ -1,7 +1,12 @@
 {
   "tests": { "enabled": false },
+  "tools": {
+    "ast_grep_search": { "enabled": false },
+    "ast_grep_replace": { "enabled": false },
+    "ast_grep_outline": { "enabled": false }
+  },
   "lsp": {
-    "disabledServers": ["expert"],
+    "disabledServers": ["expert", "dexter"],
     "servers": {
       "dexter": {
         "name": "Dexter",

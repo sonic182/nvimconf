@@ -21,6 +21,26 @@ On-demand reference for `pr-reviewer`. Read this when the PR is primarily Elixir
   - JS hooks/assets and event payload shapes
   - form handling conventions and validation behavior
 
+### Plug/parser trust boundaries
+
+When changed code runs after endpoint parsers or middleware, review the values produced by those earlier stages rather than reasoning only from the intended protocol:
+
+- Read the endpoint's `Plug.Parsers` configuration and enumerate every enabled parser and passed content type.
+- Check concrete `body_params` shapes: JSON objects are maps, top-level JSON arrays use the `"_json"` wrapper, URL-encoded bodies are maps, and multipart bodies may contain `%Plug.Upload{}` structs.
+- If code reconstructs or re-encodes an already-consumed body, preserve the content type and semantic shape together. Never run a bang encoder over parser output that may contain structs.
+- Unsupported methods and media types at a public route must return a controlled 4xx response; "the client should not send this" is not sufficient.
+- Add one regression test for each parser shape involved in a bug, including an upload-shaped multipart value when relevant.
+
+### Configuration and environment matrix
+
+For behavior controlled by application config:
+
+- Trace `config/config.exs`, imported environment files, `config/runtime.exs`, environment variables, and Docker/release overrides.
+- Record the effective value for development, test, and production before claiming a key is absent or unsafe.
+- Remember that `runtime.exs` runs in every environment unless its assignment is inside a `config_env()` condition.
+- Prefer runtime inspection (for example Tidewave `project_eval`) when available, but pair it with source inspection so the conclusion covers environments that are not currently running.
+- Test or otherwise verify the environment whose behavior the finding describes.
+
 ### Review dimensions add-ons
 
 - Cleanliness/dead code (unused functions, clauses, assigns, aliases; commented-out blocks; unreachable branches)
