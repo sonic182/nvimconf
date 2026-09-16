@@ -39,7 +39,7 @@ For behavior controlled by application config:
 - Record the effective value for development, test, and production before claiming a key is absent or unsafe.
 - Remember that `runtime.exs` runs in every environment unless its assignment is inside a `config_env()` condition.
 - Prefer runtime inspection (for example Tidewave `project_eval`) when available, but pair it with source inspection so the conclusion covers environments that are not currently running.
-- Test or otherwise verify the environment whose behavior the finding describes.
+- Use source inspection and relevant CI results to support findings about the affected environment; do not execute validation commands.
 
 ### Review dimensions add-ons
 
@@ -101,10 +101,7 @@ Dead code rots: it confuses future readers, hides bugs, and inflates the surface
 - **Permanently-off feature flags** and the branches they gate.
 - **Stale TODO/FIXME** that the PR's own change resolves but didn't remove.
 
-Caveat to always apply: a function can *look* unused but be reachable via metaprogramming (`apply/3`), a behaviour callback, a `@impl` contract, a macro, config references, or external callers (a library's public API). So **flag with reasoning and ask before recommending deletion** rather than asserting it's safe to remove. Tooling that helps surface real dead code:
-- `mix compile --warnings-as-errors` (unused vars/functions/aliases)
-- `mix xref graph` / `mix xref callers Module.fun` (find call sites)
-- `mix credo --strict` (unused, complexity, readability)
+Caveat to always apply: a function can *look* unused but be reachable via metaprogramming (`apply/3`), a behaviour callback, an `@impl` contract, a macro, config references, or external callers (a library's public API). So **flag with reasoning and ask before recommending deletion** rather than asserting it's safe to remove. Use relevant CI results for compiler and linter findings; do not run those commands locally.
 
 ### Elixir/Phoenix security footguns (quick scan)
 
@@ -131,9 +128,4 @@ Documentation:
 - if new user-facing features were added, are they reflected in the project's docs (HexDocs guides, markdown files, SSG, README)?
 - if a docs system is present but new features have no docs entry, flag it as a minor issue.
 
-Tooling suggestions when relevant:
-- `mix format --check-formatted`
-- `mix credo --strict`
-- `mix dialyzer` (or staged adoption plan if noisy)
-- `mix compile --warnings-as-errors` (catches dead/unused code)
-- `mix xref` (call graphs / unreachable code)
+Use relevant CI results for format, lint, type, compiler, and call-graph checks; do not run those commands locally.

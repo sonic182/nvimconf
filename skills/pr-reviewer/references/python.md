@@ -51,9 +51,3 @@ On-demand reference for `pr-reviewer`. Read this when the PR is primarily Python
 - Documentation:
   - if new user-facing features or endpoints were added, are they reflected in the project's docs system (Sphinx, MkDocs, SSG, OpenAPI/auto-generated docs, README, etc.)?
   - if a docs system is present but new features have no docs entry, flag it as a minor issue.
-
-Tooling suggestions when relevant:
-- `ruff check .`
-- `ruff format --check .` (or project formatter)
-- `mypy .` (or pyright, based on project standard)
-- `pytest -q`

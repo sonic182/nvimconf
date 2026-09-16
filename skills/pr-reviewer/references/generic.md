@@ -1,4 +1,4 @@
-On-demand reference for `pr-reviewer`. Read this when the PR's primary language isn't Python or Elixir.
+On-demand reference for `pr-reviewer`. Read this when the PR's primary language isn't Python, Elixir, or Rust.
 
 ### Generic checklist
 

@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: Review pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Applies deep language-specific checks for Python, PHP/Slim/Blade, and Elixir/Phoenix, and a generic checklist for any other language. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
+description: Review pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Applies deep language-specific checks for Python, Elixir/Phoenix, PHP/Slim/Blade, and Rust, and a generic checklist for any other language. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
 license: MIT
 compatibility: expects git CLI and repository access; optionally uses gh CLI for PR and issue context
 metadata:
@@ -39,7 +39,7 @@ Ask clarifying questions only when missing context blocks correctness/security c
 
 1) Load project instructions
 - Find and read the applicable `AGENTS.md` and `CLAUDE.md` files from the repository root through the directories containing touched files.
-- Turn their MUST/DO NOT/testing/validation rules into a review checklist.
+- Turn their MUST/DO NOT rules and test/validation expectations into a review checklist without executing commands.
 - Verify every newly introduced or modified behavior against that checklist; do not report unrelated pre-existing violations.
 - Cite the instruction file and rule when it causes a finding.
 
@@ -63,7 +63,10 @@ Ask for one of:
 - `gh pr view --comments`
 - `gh pr view --json number,title,body,comments`
 
-7) Extract linked issue information (optional)  
+7) Check CI status
+When the PR has CI, check that its required checks are green. Do not run tests, linters, or other validation commands locally as part of the review. If CI is missing, pending, or failing, continue the review and flag that status in the final summary; do not substitute local execution.
+
+8) Extract linked issue information (optional)
 If referenced:
 - Same repo: `gh issue view <NUMBER>`
 - With comments: `gh issue view <NUMBER> --comments`
@@ -72,6 +75,10 @@ If referenced:
 If repository access isn't available, explicitly list the exact files/commands needed and why.
 
 ### 1) Context-gathering playbook (MANDATORY)
+
+If the gmem MCP server is connected, start with one `recall` on the component under review. A
+constraint, a prior decision, or a dependency's verified behaviour already recorded there keeps a
+finding from being raised against a premise that was settled in an earlier session.
 
 Before writing conclusions, identify:
 - touched modules (routes/views/controllers, services/contexts, schemas/models, settings/config, background jobs, middleware)
@@ -92,6 +99,7 @@ Detect the PR's primary language from the diff's file extensions, then read the 
 - Primarily Python (`.py`) → read `references/python.md`
 - Primarily Elixir/Phoenix (`.ex`, `.exs`, `.heex`) → read `references/elixir.md`
 - Primarily PHP (`.php`, including `.blade.php`) → read `references/php.md`; apply its Slim/Blade checks when those frameworks are present
+- Primarily Rust (`.rs`) → read `references/rust.md`
 - Anything else → read `references/generic.md`
 
 ### 3) Review dimensions
@@ -103,13 +111,13 @@ Detect the PR's primary language from the diff's file extensions, then read the 
 - Testing (coverage for happy path, auth failures, error paths, regressions)
 - Architecture (separation of routing, business logic, persistence, side effects)
 - Documentation (behavior changes, migrations, config/env updates, new features documented in the project's docs system, if one exists — flag as minor if a docs system exists but the new feature has no entry)
-- Project instructions (new and modified code follows every applicable `AGENTS.md`/`CLAUDE.md` rule, especially required tests and validation commands)
+- Project instructions (new and modified code follows every applicable `AGENTS.md`/`CLAUDE.md` rule, including test and validation expectations; do not execute commands)
 
 ### 4) Required output structure (MANDATORY)
 
 I output the review as:
 
-1) Summary (what changed + ship/needs work/blocked + project-instruction compliance)  
+1) Summary (what changed + ship/needs work/blocked + CI status + project-instruction compliance)
 2) Critical Issues (blocking)  
 3) Major Concerns  
 4) Minor Suggestions  

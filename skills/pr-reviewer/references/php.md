@@ -90,12 +90,4 @@ A method may be called through framework routing, DI, reflection, Blade includes
 
 For user-facing routes/features, check the repository's docs and UI catalog/story conventions. Missing required documentation is a minor concern.
 
-### Tooling suggestions when relevant
-
-Use the project scripts first. Typical commands are:
-
-- `composer qa` (or the repository's lint, formatter, static analysis, and coding-standard commands)
-- `composer test` or `vendor/bin/phpunit`
-- `npm run build` for asset changes
-
-PHPStan and custom architecture sniffs are authoritative when configured. If a project explicitly limits environment access or outbound HTTP to particular layers, treat violations as blocking according to that project's policy.
+PHPStan and custom architecture sniffs are authoritative when configured; use their CI results. If a project explicitly limits environment access or outbound HTTP to particular layers, treat violations as blocking according to that project's policy.
