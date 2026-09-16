@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: Review pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Applies deep language-specific checks for Python and Elixir/Phoenix, and a generic checklist for any other language. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
+description: Review pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Applies deep language-specific checks for Python, PHP/Slim/Blade, and Elixir/Phoenix, and a generic checklist for any other language. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
 license: MIT
 compatibility: expects git CLI and repository access; optionally uses gh CLI for PR and issue context
 metadata:
@@ -91,6 +91,7 @@ Detect the PR's primary language from the diff's file extensions, then read the 
 
 - Primarily Python (`.py`) → read `references/python.md`
 - Primarily Elixir/Phoenix (`.ex`, `.exs`, `.heex`) → read `references/elixir.md`
+- Primarily PHP (`.php`, including `.blade.php`) → read `references/php.md`; apply its Slim/Blade checks when those frameworks are present
 - Anything else → read `references/generic.md`
 
 ### 3) Review dimensions
