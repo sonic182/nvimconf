@@ -19,6 +19,16 @@ Reach for `ast-grep` before `rg` when searching for:
 
 Use `rg` only when the target is not code syntax, such as comments, prose, configuration strings, generated text, log messages, filenames, or when `ast-grep` is unavailable or cannot parse the language.
 
+## Language references
+
+Read the entry for the target language **before** a non-trivial search in it, not after one comes back empty. These carry the node kinds, the syntactic forms that need a pattern each, and the outline rules ast-grep does not bundle.
+
+| Language | Reference | Ships |
+| --- | --- | --- |
+| Elixir | [references/elixir.md](references/elixir.md) | [assets/elixir-outline.yml](assets/elixir-outline.yml) |
+
+A language with no entry is not special-cased — use the general guidance below. When one turns out to need its own rules, add a reference rather than growing this file.
+
 ## Outline: cheap navigation before reading whole files
 
 Before reading a large unfamiliar file or directory end to end, run `ast-grep outline` first. It lists imports, exports, classes, functions, and members without dumping full source, so the far more expensive full read only happens for the parts that matter.
@@ -54,6 +64,8 @@ constant: badRequest, unauthorized, notFound, conflict
 ```
 
 Use this as the first move when exploring an unfamiliar repo or module, then open only the specific functions/classes the task touches — not every file in the directory.
+
+**`nothing found` does not mean the language is unsupported.** Outline output comes from bundled *extractor rules*, which exist for fewer languages than the parser does. A language with no bundled extractor outlines as empty even though patterns match that same file normally. Supply extractors with `--outline-rules <FILE>` — the language references above ship ready-to-use ones.
 
 ## Rule development workflow (dump → test → scan)
 
@@ -102,24 +114,20 @@ ast-grep -p 'async function $NAME($$$ARGS): $RETURN { $$$BODY }' -l ts src
 
 ### Elixir function heads
 
-Elixir function definitions with guards have a different AST shape from
-unguarded definitions. A pattern such as `def name($$$ARGS) do $$$BODY end`
-does **not** match `def name($$$ARGS) when $COND do $$$BODY end`; include the
-guard in the pattern instead:
+A function head has three different AST shapes — plain, guarded (`when`), and
+one-liner (`, do:`) — and a pattern for one matches neither of the others:
 
 ```bash
-# Broad guarded definitions
+ast-grep -p 'def $NAME($$$ARGS) do $$$BODY end' -l elixir lib
 ast-grep -p 'def $NAME($$$ARGS) when $COND do $$$BODY end' -l elixir lib
-
-# Exact guarded function, including multiline heads/default arguments
-ast-grep -p 'def append_external_outbound_message($$$ARGS) when $COND do $$$BODY end' \
-  -l elixir lib/athena/communications.ex
+ast-grep -p 'def $NAME($$$ARGS), do: $BODY' -l elixir lib
 ```
 
-If a function may be guarded or unguarded, run both structural patterns (or use
-an `any` YAML rule). Do not fall back to text search merely because an
-unguarded `def` pattern returned no matches; first inspect the function head
-with `--debug-query=cst` or try the guarded form.
+Multiline heads and default arguments need nothing extra — `$$$ARGS` absorbs
+them. But an empty result from the plain pattern is not evidence the function is
+absent: try the other heads, or `--debug-query=cst`, before falling back to text
+search. Full details, the outline ruleset and the pipe caveat:
+[references/elixir.md](references/elixir.md).
 
 Useful flags:
 

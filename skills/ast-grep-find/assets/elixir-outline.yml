@@ -1,0 +1,69 @@
+# Outline extractors for Elixir. ast-grep ships none, so `ast-grep outline` prints
+# "nothing found" for .ex/.exs until this file is passed with --outline-rules.
+#
+#   ast-grep outline lib --outline-rules assets/elixir-outline.yml --view expanded
+#
+# One extractor per syntactic form: in tree-sitter-elixir a definition is a `call`
+# node, and plain / guarded / one-liner heads are three different shapes.
+id: elixir-module
+role: item
+language: Elixir
+symbolType: module
+name: $NAME
+rule:
+  pattern: defmodule $NAME do $$$BODY end
+---
+id: elixir-def
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: def $NAME($$$ARGS) do $$$BODY end
+---
+id: elixir-def-guarded
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: def $NAME($$$ARGS) when $COND do $$$BODY end
+---
+# Quoted: an unquoted `do:` makes YAML read the rest as a mapping value.
+id: elixir-def-inline
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: "def $NAME($$$ARGS), do: $BODY"
+---
+id: elixir-defp
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: defp $NAME($$$ARGS) do $$$BODY end
+---
+id: elixir-defp-guarded
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: defp $NAME($$$ARGS) when $COND do $$$BODY end
+---
+id: elixir-defp-inline
+role: member
+parentRuleIds: [elixir-module]
+language: Elixir
+symbolType: function
+name: $NAME
+rule:
+  pattern: "defp $NAME($$$ARGS), do: $BODY"
