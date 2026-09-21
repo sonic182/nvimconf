@@ -8,10 +8,21 @@ description: |
 
 Use this skill for any task that introduces, changes, reviews, debugs, or refactors Elixir code.
 
-For Phoenix, LiveView, Ecto, and supervision-tree specifics, read
-`references/phoenix-ecto-liveview.md` when the task touches those areas.
+This file holds the rules that apply to every Elixir task. Everything else is
+loaded on demand — read a reference only when its trigger below is true, and read
+only that one. These layers are independent: Ecto is used with or without
+Phoenix, and a Phoenix project may have no LiveView.
 
-Primary references:
+| Read | When the task touches |
+| --- | --- |
+| `references/module-conventions.md` | a new module, directive order, `@moduledoc`/`@doc`/`@spec`/`@type`, or a struct definition |
+| `references/testing.md` | writing or reviewing ExUnit tests |
+| `references/otp.md` | a GenServer, Agent, Task, supervisor, supervision tree, or choosing between them |
+| `references/ecto.md` | schemas, changesets, queries, bulk writes, transactions, migrations |
+| `references/phoenix.md` | contexts as the boundary, controllers, plugs, the web layer |
+| `references/liveview.md` | LiveViews, components, assigns, streams, forms, PubSub-driven UI |
+
+Official docs:
 
 * Elixir Naming Conventions: https://hexdocs.pm/elixir/naming-conventions.html
 * Elixir code anti-patterns: https://hexdocs.pm/elixir/code-anti-patterns.html
@@ -38,6 +49,8 @@ Avoid:
 
 * Raising for expected failures.
 * Defensive code that hides bugs.
+* API surface built before a caller exists — options, filters, clauses, or allowlists
+  added because a convention lists them rather than because something calls them.
 * Processes used only for code organization.
 * Macros where functions, behaviours, protocols, or data would work.
 * Style churn unrelated to the user's request.
@@ -66,6 +79,7 @@ When applying a house rule, do not present it as official Elixir guidance.
 
 When writing code:
 
+0. If the gmem MCP server is connected, `recall` once on the context, schema, or module being touched, before reading code. Project conventions and prior decisions that the source does not state live there.
 1. Inspect nearby project code when available.
 2. Preserve the existing architecture unless it is clearly broken or the user asks to change it.
 3. Generate code that should pass `mix format`.
@@ -148,96 +162,6 @@ defguard admin?(role) when role == :admin              # bad — ? isn't guard-s
 
 MyApp.HTTPClient  # good — acronym stays uppercase
 MyApp.HttpClient  # bad — acronym should stay uppercase
-```
-
-## Module Layout
-
-Use this order unless the project clearly follows another convention:
-
-1. `@moduledoc`
-2. `@behaviour`
-3. `use`
-4. `import`
-5. `require`
-6. `alias`
-7. module attributes
-8. `defstruct`
-9. `@typedoc` / `@type`
-10. `@callback` / `@macrocallback` / `@optional_callbacks`
-11. macros
-12. guards
-13. public functions
-14. private functions
-
-Within each directive group, sort aliases/imports/requires alphabetically when doing so does not obscure meaning.
-
-Rules:
-
-* Put `@moduledoc` immediately after `defmodule`.
-* Use `@moduledoc false` for intentionally internal modules.
-* Prefer one module per file.
-* Use `__MODULE__` for self-reference.
-* If a module aliases itself only for readability, use `alias __MODULE__, as: Name`.
-
-Example:
-
-```elixir
-defmodule MyApp.Token do
-  @moduledoc """
-  Token utilities.
-  """
-
-  alias MyApp.Accounts.User
-
-  defstruct [:value]
-
-  @typedoc "Parsed token."
-  @type t :: %__MODULE__{value: String.t()}
-
-  @spec parse(String.t()) :: {:ok, t()} | {:error, :empty}
-  def parse(""), do: {:error, :empty}
-  def parse(value), do: {:ok, %__MODULE__{value: value}}
-end
-```
-
-## Docs and Typespecs
-
-Use docs and specs to clarify public APIs, not to decorate obvious private helpers.
-
-Rules:
-
-* Put `@doc` before `@spec`.
-* Put `@spec` directly before `def`.
-* Do not leave a blank line between `@spec` and `def`.
-* Use Markdown heredocs for module and function docs.
-* Add doctests when they clarify behavior and are stable.
-* Name a struct's primary type `t`.
-* Put custom types near the top of the module.
-* Pair each `@typedoc` with the relevant `@type`.
-
-Example:
-
-```elixir
-@doc """
-Parses a token.
-
-## Examples
-
-    iex> MyApp.Token.parse("abc")
-    {:ok, %MyApp.Token{value: "abc"}}
-"""
-@spec parse(String.t()) :: {:ok, t()} | {:error, :empty}
-def parse(""), do: {:error, :empty}
-def parse(value), do: {:ok, %__MODULE__{value: value}}
-```
-
-For long union types, split members across lines:
-
-```elixir
-@type result ::
-        {:ok, term()}
-        | {:error, :empty}
-        | {:error, :invalid}
 ```
 
 ## Functions and Control Flow
@@ -396,128 +320,6 @@ Use `Date`, `Time`, `NaiveDateTime`, and `DateTime` instead of manual date/time 
 
 Use `URI`, `Path`, and structured APIs instead of string concatenation for structured data.
 
-## Structs
-
-Rules:
-
-* In `defstruct`, list `nil`-default atom fields first, then keyword defaults.
-* Omit brackets when `defstruct` has only keyword defaults.
-* Keep brackets when `defstruct` includes bare atom fields.
-* Use `%__MODULE__{}` in the struct's own type.
-
-```elixir
-defstruct [:id, :name, active: true, params: []]  # brackets required — has bare atom fields
-
-@type t :: %__MODULE__{
-        id: integer() | nil,
-        name: String.t() | nil,
-        active: boolean(),
-        params: Keyword.t()
-      }
-```
-
-## OTP
-
-### GenServer
-
-Provide a module-level client API. Do not make callers use `GenServer.call/3` or
-`GenServer.cast/2` directly across the application.
-
-Put the public API before callbacks. Mark callbacks with `@impl true`.
-
-Use:
-
-* `handle_call/3` for calls that reply.
-* `handle_cast/2` for fire-and-forget messages.
-* `handle_info/2` for plain messages.
-
-Prefer a map or struct for GenServer state once the state has more than one concept or may
-grow. A bare value is acceptable only for tiny examples or truly single-value state.
-
-Do not perform slow I/O inside callbacks. Start supervised async work or reply later with
-`GenServer.reply/2` when appropriate.
-
-Example:
-
-```elixir
-defmodule MyApp.Counter do
-  use GenServer
-
-  @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, %{count: 0}, opts)
-  end
-
-  @spec increment(pid()) :: :ok
-  def increment(pid), do: GenServer.cast(pid, :increment)
-
-  @spec value(pid()) :: integer()
-  def value(pid), do: GenServer.call(pid, :value)
-
-  @impl true
-  def init(state), do: {:ok, state}
-
-  @impl true
-  def handle_call(:value, _from, state), do: {:reply, state.count, state}
-
-  @impl true
-  def handle_cast(:increment, state) do
-    {:noreply, %{state | count: state.count + 1}}
-  end
-end
-```
-
-### Agent, Task, and Supervision
-
-Use:
-
-* `Agent` only for simple shared state.
-* `Task` for one-off async work.
-* `Task.Supervisor` when task lifecycle and supervision matter.
-* `DynamicSupervisor` for children started at runtime.
-* `Registry` for process discovery.
-* A job library, such as Oban, for durable background work, retries, and queues when the project already uses it or the user asks for that design.
-
-Always supervise long-lived processes. Do not use unsupervised `spawn` for production workflows.
-
-Use `:one_for_one` for independent children and `:one_for_all` when children depend on each other.
-
-Do not put business logic in processes merely because they feel “service-like.” Use modules and functions until runtime state, concurrency, fault tolerance, or isolation is needed.
-
-## Testing
-
-Use ExUnit conventions that match the project.
-
-Prefer:
-
-* `describe` blocks around a function or behavior.
-* Clear test names describing observable behavior.
-* Expression under test on the left and expected value on the right.
-* Pattern matching assertions for tagged tuples.
-* `setup` for repeated per-test data.
-* `setup_all` only for shared expensive setup that is safe across tests.
-
-Good:
-
-```elixir
-describe "parse/1" do
-  test "returns ok tuple for valid input" do
-    assert MyApp.Token.parse("abc") == {:ok, %MyApp.Token{value: "abc"}}
-  end
-
-  test "returns error for empty input" do
-    assert {:error, :empty} = MyApp.Token.parse("")
-  end
-end
-```
-
-When reviewing tests, flag:
-
-* Tests that depend on order.
-* Tests that hide too much behind helpers.
-* Tests that assert implementation details instead of behavior.
-* Shared state that can leak between async tests.
-
 ## Comments
 
 Prefer readable code over explanatory comments.
@@ -605,16 +407,6 @@ end
 # that rule where it enforces it, instead of passing a list down
 def apply_filters(query, filters), do: apply_filter(filters, query)
 ```
-
-## Phoenix, Ecto, and LiveView
-
-When the task touches Phoenix, Ecto, LiveView, controllers, contexts, schemas, migrations,
-queries, changesets, PubSub, or application supervision trees, read:
-
-`references/phoenix-ecto-liveview.md`
-
-Use that reference for framework-specific boundaries, security checks, lifecycle rules,
-migrations, Ecto query/write patterns, and supervision selection.
 
 ## Verification
 
