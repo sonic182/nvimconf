@@ -563,6 +563,15 @@ Flag official Elixir anti-patterns, especially:
 * Unsafely broad `try/rescue`.
 * Macros where functions or data would work.
 
+Also flag, as house rules:
+
+* Public surface with no caller in the change that introduces it: an option key, a filter
+  clause, or a function added because a convention lists it. A convention's vocabulary is
+  the set of names to use when you need one, not a checklist to implement.
+* The same constraint enforced twice in two places — typically an allowlist upstream of a
+  dispatch that already raises on anything it does not match. One of the two will drift,
+  and the duplicate is the one nobody updates.
+
 Examples:
 
 ```elixir
@@ -583,6 +592,18 @@ create_user(%{
   email: email,
   role: role
 })
+```
+
+```elixir
+# Bad — `allowed` restates the clauses of a dispatch that already raises on a key it
+# does not match, so the accepted key set now lives in two files
+def apply_filters(query, filters, allowed) do
+  filters |> Keyword.validate!(allowed) |> apply_filter(query)
+end
+
+# Good — the clauses are the accepted set. A caller that needs a narrower one states
+# that rule where it enforces it, instead of passing a list down
+def apply_filters(query, filters), do: apply_filter(filters, query)
 ```
 
 ## Phoenix, Ecto, and LiveView
