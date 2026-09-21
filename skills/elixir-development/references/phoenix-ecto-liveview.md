@@ -61,6 +61,12 @@ Rules:
 * Never cast fields such as `role`, `admin`, `org_id`, `tenant_id`, `user_id`, or
   `account_id` from untrusted params unless that is explicitly the intended API.
 * Set privileged, tenant, scope, or ownership fields server-side.
+* Do not cast lifecycle or audit columns — the fields that record what has happened to a
+  row since it was created: `revoked_at`, `confirmed_at`, `deleted_at`, `last_used_at`,
+  `failed_attempts`, `status` where a transition owns it. The system writes those when
+  the event happens. A creation changeset that casts them lets a caller insert a record
+  born already spent, or carrying an audit trail of events that never took place.
+  An issuing changeset and a transition are different operations: keep them apart.
 * Validate with targeted validators: `validate_required/2`, `validate_format/3`,
   `validate_number/3`, `validate_length/3`, `validate_inclusion/3`, or custom validators
   when domain-specific.
@@ -113,6 +119,10 @@ Rules:
 
 * `Repo.get/2` returns `nil`; use it when absence is expected.
 * `Repo.get!/2` raises; reserve it for setup, tests, or cases where absence is a bug.
+* `Repo.one/1` raises `Ecto.MultipleResultsError` when the query matches more than one
+  row. A function documented to return `nil` must therefore only accept predicates that
+  can resolve a single row — a non-unique column belongs in the list function instead.
+  Do not share one filter allowlist between a "one row" and a "many rows" function.
 * Keep query composition in contexts or dedicated query modules, not controllers or
   LiveViews.
 * Compose queries with `Ecto.Query`: `from`, `where`, `join`, `order_by`, `limit`,
@@ -148,6 +158,73 @@ end
 where(query, [item], fragment("? ilike ?", item.name, ^"%#{term}%"))  # safe — parameterized
 where(query, [item], fragment("name ilike '%#{term}%'"))              # unsafe — interpolated
 ```
+
+### Bulk writes and state transitions
+
+`Repo.update_all/3` and `Repo.delete_all/1` skip changesets, validations, and
+`timestamps()` autogeneration, and they act on every row the query matches.
+
+Rules:
+
+* `update_all` does not set `updated_at`. Capture the time once and set it beside the
+  columns you are changing, or a security-relevant change leaves rows looking untouched
+  since insertion.
+* A bulk update or delete must require its scope. Never let an absent, empty, or
+  caller-supplied filter widen the statement to the whole table, and do not reuse a read
+  function's permissive filter set for one — a key that is harmless in `list/1` can mean
+  "every row" in `delete_all/1`.
+* Put the state predicate in the statement's own `WHERE`, not in a read before it. That
+  is what makes a transition happen exactly once under concurrency, and what stops a
+  repeated call from overwriting the timestamp of the event that first caused it.
+* Return the affected rows with `select/3` on the query rather than re-reading them, so
+  the result reflects what the statement actually changed.
+* Delete on the column that expresses the retention rule, not on "no longer usable". A
+  row that was revoked or spent normally keeps its original expiry and stays as history
+  until then; deleting on liveness drops that trail the moment it is written.
+
+```elixir
+# good — scope is a required argument, timestamps set, predicate in the UPDATE's WHERE
+def revoke_all(account_code) when is_binary(account_code) do
+  now = DateTime.utc_now(:second)
+
+  {count, _rows} =
+    Grant
+    |> where([g], g.account_code == ^account_code and is_nil(g.revoked_at))
+    |> Repo.update_all(set: [revoked_at: now, updated_at: now])
+
+  count
+end
+
+# bad — filters come straight from the caller, so `[]` revokes every row in the table,
+# and `updated_at` still claims the row has not changed since it was created
+def revoke_all(filters) do
+  Grant
+  |> where(^filters)
+  |> Repo.update_all(set: [revoked_at: DateTime.utc_now()])
+end
+```
+
+A read-then-write is neither concurrent-safe nor idempotent:
+
+```elixir
+# bad — two callers both read a live row and both write. Calling it again also rewrites
+# `revoked_at`, destroying the timestamp of the revocation that actually took effect
+case Repo.get(Grant, id) do
+  %Grant{revoked_at: nil} = grant ->
+    grant |> Ecto.Changeset.change(revoked_at: now) |> Repo.update()
+end
+
+# good — the database decides. Zero rows updated means it had already happened, so the
+# caller can return the row as it stands instead of changing it
+Grant
+|> where([g], g.id == ^id and is_nil(g.revoked_at))
+|> select([g], g)
+|> Repo.update_all(set: [revoked_at: now, updated_at: now])
+```
+
+Under `READ COMMITTED`, the second of two concurrent statements blocks on the row lock,
+re-reads the committed row, no longer matches the predicate, and updates zero rows. Single
+use is then the database's guarantee rather than the calling module's.
 
 ### Transactions and Ecto.Multi
 
