@@ -6,7 +6,7 @@ description: |
 
 # ast-grep-find
 
-Use `ast-grep` (`ast-grep` or `sg`) as the default way to find code patterns in repositories. Prefer syntax-aware search over `rg` whenever the target is code structure rather than arbitrary text.
+Use `ast-grep` as the default way to find code patterns in repositories. Prefer syntax-aware search over `rg` whenever the target is code structure rather than arbitrary text.
 
 ## Core rule
 
@@ -85,12 +85,11 @@ For anything beyond a trivial one-line pattern, iterate on a small snippet befor
 1. Check whether `ast-grep` is installed:
 
    ```bash
-   command -v ast-grep || command -v sg
+   command -v ast-grep
    ```
 
-2. Prefer the full `ast-grep` command in portable instructions. On Linux, `sg` can refer to the system `setgroups` command, so do not assume `sg` means ast-grep.
-3. Run searches from the repository root unless the user gives a narrower path.
-4. Quote patterns with single quotes so shells do not expand `$META` variables.
+2. Run searches from the repository root unless the user gives a narrower path.
+3. Quote patterns with single quotes so shells do not expand `$META` variables.
 
 ## One-shot search workflow
 

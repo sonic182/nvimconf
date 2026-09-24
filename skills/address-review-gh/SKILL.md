@@ -13,6 +13,12 @@ Resolve actionable inline PR review comments while preserving existing behavior,
 
 ## Steps
 
+### 0. Recall what is already known
+
+If the gmem MCP server is connected, call `recall` once on the component or area the PR touches
+before reading any file. A reviewer's premise may already have been settled — confirmed or
+disproved — in an earlier session.
+
 ### 1. Identify the current PR
 
 ```bash
@@ -29,6 +35,8 @@ gh api "repos/$REPO/pulls/$PR/comments" \
 ```
 
 ### 3. Filter and group comments
+
+Based on the languages of the commented files, load the matching `<language>-development` skill if available (e.g. `python-development`, `elixir-development`) before reading or editing code.
 
 Collect all inline comments, ignore comments that are clearly outdated or no longer applicable, then group the remaining comments by file path.
 
