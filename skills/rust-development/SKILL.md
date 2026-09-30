@@ -78,7 +78,7 @@ When applying a house rule, do not present it as official Rust guidance.
 When writing code:
 
 0. If the gmem MCP server is connected, `recall` once on the crate, module, or type being touched, before reading code. Project conventions and prior decisions that the source does not state live there.
-1. Inspect nearby project code and `Cargo.toml` (edition, MSRV, features, lints).
+1. Inspect nearby project code and `Cargo.toml` (edition, MSRV, features, lints). Locate definitions with gmem `find_symbol` / `code_outline` when listed and read only the returned ranges; find callers with `ast-grep` or `rg -w`.
 2. Preserve the existing architecture unless it is clearly broken or the user asks to change it.
 3. Generate code that should pass `cargo fmt --check` and `cargo clippy -- -D warnings`.
 4. Prefer narrow visibility (`pub(crate)`, private) and explicit, small APIs.

@@ -56,7 +56,7 @@ Resolved threads are already filtered out. An `outdated: true` thread points at 
 
 For each affected file:
 
-* If the gmem code tools are listed, `code_outline` the file and read the symbols enclosing each commented line; otherwise read the full file
+* `code_outline` the file first when the gmem code tools are listed, and read only the symbols enclosing each commented line; read the full file only without them
 * Inspect the area around each referenced line
 * Apply all relevant fixes in that file together when possible
 
@@ -64,7 +64,7 @@ For each affected file:
 
 For each comment:
 
-1. Read the file and surrounding context
+1. Read the enclosing symbol and the code it depends on. Locate definitions in other files with `find_symbol` and read the returned range, not the whole file; find callers and usages with `rg -w` or `ast-grep`
 2. Understand the reviewer's intent, not just the literal wording
 3. Apply the smallest correct change
 4. Follow the project's UI and code conventions (check if any available skills cover the relevant conventions for this project)
@@ -94,7 +94,7 @@ Summarize:
 Before applying fixes, look for project-specific conventions by:
 
 * Checking available skills — a project may have a dedicated conventions or language-specific review skill
-* Grepping the codebase for existing usage near the affected code
+* Finding existing usage near the affected code: `find_symbol` for the definitions involved, `ast-grep` for call sites and code patterns, `rg` for strings and config
 
 Prefer patterns already established in the project over inventing new ones.
 
