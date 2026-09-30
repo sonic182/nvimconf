@@ -1,7 +1,7 @@
 ---
 name: ast-grep-find
 description: |
-    It is a must to use ast-grep when code search — use this skill before reaching for grep/ripgrep or similar plain text search. Apply when locating functions, calls, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, refactor targets, or any code pattern where syntax-aware matching is more reliable than text matching.
+    Use ast-grep for syntax-aware code search instead of grep/ripgrep. Apply when finding calls, usages, call sites, imports, JSX, decorators, error handling, unsafe APIs, duplicated expressions, blast radius, refactor targets, codemods, or any code pattern where syntax-aware matching is more reliable than text matching. For where a symbol is defined or a file's outline, prefer the gmem find_symbol/code_outline tools when they are listed.
 ---
 
 # ast-grep-find
@@ -30,6 +30,8 @@ Read the entry for the target language **before** a non-trivial search in it, no
 A language with no entry is not special-cased — use the general guidance below. When one turns out to need its own rules, add a reference rather than growing this file.
 
 ## Outline: cheap navigation before reading whole files
+
+If the gmem `code_outline` tool is listed, use it instead. `ast-grep outline` is the fallback.
 
 Before reading a large unfamiliar file or directory end to end, run `ast-grep outline` first. It lists imports, exports, classes, functions, and members without dumping full source, so the far more expensive full read only happens for the parts that matter.
 

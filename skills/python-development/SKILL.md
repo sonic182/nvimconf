@@ -20,6 +20,7 @@ For FastAPI/Django, async, ORM, and packaging detail, read `references/web-async
 
 ## Core Principles
 
+- Before reading code: if the gmem MCP server is connected, `recall` once on the module or package being touched. Locate definitions with gmem `find_symbol` / `code_outline` when listed and read only the returned ranges; find callers with `ast-grep` or `rg -w`.
 - Write idiomatic, readable Python that already matches `ruff format` (Black-compatible).
 - Target Python 3.12+; use modern syntax (`list[int]`, `X | None`, `type` aliases, PEP 695 generics).
 - Prefer simple functions over clever abstractions; "explicit is better than implicit" (PEP 20).

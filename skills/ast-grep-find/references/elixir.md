@@ -60,7 +60,8 @@ the box. That is not a parse failure and not a missing language — patterns wor
 normally. ast-grep simply ships no bundled outline extractor for Elixir, for the
 reason above: there is no node kind to key an extractor on.
 
-Pass the bundled ruleset:
+When the gmem `code_outline` tool is listed, prefer it: it outlines Elixir,
+`~H` sigils and `.heex` files with no rules. Otherwise pass the bundled ruleset:
 
 ```bash
 ast-grep outline lib/my_app/accounts.ex \

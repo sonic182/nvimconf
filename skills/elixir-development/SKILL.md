@@ -80,7 +80,7 @@ When applying a house rule, do not present it as official Elixir guidance.
 When writing code:
 
 0. If the gmem MCP server is connected, `recall` once on the context, schema, or module being touched, before reading code. Project conventions and prior decisions that the source does not state live there.
-1. Inspect nearby project code when available.
+1. Inspect nearby project code when available. Locate definitions with gmem `find_symbol` / `code_outline` when listed and read only the returned ranges; find callers with `ast-grep` or `rg -w`.
 2. Preserve the existing architecture unless it is clearly broken or the user asks to change it.
 3. Generate code that should pass `mix format`.
 4. Prefer explicit, narrow APIs.
@@ -339,11 +339,37 @@ Rules:
 * Use uppercase annotations: `TODO:`, `FIXME:`, `OPTIMIZE:`, `HACK:`, `REVIEW:`.
 * Document custom annotations in the project README.
 
+### Length
+
+One line. A second only when the rule genuinely does not fit in one. Never a paragraph.
+
+Qualifying for a comment is not a budget to spend. A tradeoff worth marking is still worth
+marking in ten words.
+
+* State the constraint, drop the narrative. The reader needs the rule that binds the code, not
+  how it was discovered.
+* Cut the defence of the choice. Why an alternative was rejected belongs in the commit message
+  or the PR, where it is read once — not above the line, where it is read forever and drifts.
+* Name the mechanism once. Do not restate it in the `@moduledoc`, the `@doc` and the comment.
+* Write the same brevity into `@moduledoc` and `@doc`: what a caller needs, then stop.
+
 Good:
 
 ```elixir
 # Normalize external input before matching on known statuses.
 attrs = normalize_attrs(attrs)
+
+# Timers never fire early and jitter only delays, so a rearm always rolls to tomorrow.
+target = if DateTime.compare(today, now) == :gt, do: today, else: DateTime.add(today, 1, :day)
+```
+
+Bad — same rule, padded into prose:
+
+```elixir
+# Erlang timers never fire early, and the jitter only ever pushes a run later, so
+# recomputing right after one always lands past today's target and rolls to tomorrow
+# rather than firing a second time.
+target = if DateTime.compare(today, now) == :gt, do: today, else: DateTime.add(today, 1, :day)
 ```
 
 ## Anti-Patterns to Flag
