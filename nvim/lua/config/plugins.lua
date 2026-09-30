@@ -51,20 +51,20 @@ return {
       })
     end,
   },
-  {
-    "olimorris/codecompanion.nvim",
-    config = function() require("config.codecompanion") end,
-    -- opts = {
-    --   -- NOTE: The log_level is in `opts.opts`
-    --   opts = {
-    --     log_level = "DEBUG", -- or "TRACE"
-    --   },
-    -- },
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-    },
-  },
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   config = function() require("config.codecompanion") end,
+  --   -- opts = {
+  --   --   -- NOTE: The log_level is in `opts.opts`
+  --   --   opts = {
+  --   --     log_level = "DEBUG", -- or "TRACE"
+  --   --   },
+  --   -- },
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --   },
+  -- },
   -- Syntax & LSP/Completion ecosystem
   { "neovim/nvim-lspconfig",           config = function() require("config.lsp") end },
   { "elixir-lang/vim-elixir" },

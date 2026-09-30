@@ -118,13 +118,16 @@ Copy this checklist and tick it as you go:
 
 ## Discovery
 
-Keep discovery read-only and report evidence before editing. For broad scope,
-split into parallel lanes along production owner boundaries (domain/context,
-adapters/IO, web/UI, jobs/processes, tooling) plus one cross-cutting
-junk-pattern sweep. Start from the discovery recipes in the language reference:
-`ast-grep` for syntax-shaped patterns, `rg` for text. Outside
-campaign mode, prefer a few high-confidence candidates over a large speculative
-inventory.
+Keep discovery read-only and report evidence before editing. When gmem's code
+tools are available, use `find_symbol` to locate known definitions and
+`code_outline` to inspect file structure before reading large files. They do
+not index call sites or references: use `ast-grep` for syntax-shaped code and
+`rg` for plain text, config, or code the parser cannot handle. If gmem is
+unavailable, stale, or unhelpful, use those searches to locate the current code.
+Start from the discovery recipes in the language reference. For broad scope,
+split discovery along production owner boundaries plus one cross-cutting
+junk-pattern sweep. Outside campaign mode, prefer a few high-confidence
+candidates over a large speculative inventory.
 
 ## Retention bar
 
