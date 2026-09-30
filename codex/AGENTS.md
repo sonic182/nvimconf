@@ -1,12 +1,15 @@
 
-## Special Rule
+## Code Search
 
-For structural code search involving syntax-aware patterns such as function calls, imports, JSX, decorators, classes, or AST structure:
+Pick the tool by what you are looking for:
 
-* Use `ast-grep` instead of text-based search tools.
-* If an `ast-grep-find` skill is available, load and follow that skill before performing structural searches.
-* For plain-text search, use `rg` (ripgrep) when available.
-* Do not use `grep` when `rg` is available.
+* Where a symbol is defined, or what a file contains: use the gmem `find_symbol` / `code_outline` tools when they are available, then read only the returned line range instead of the whole file. They index definitions only, never call sites or references.
+* Call sites, usages, and syntax-shaped patterns (function calls, imports, JSX, decorators, AST structure): use `ast-grep`. If an `ast-grep-find` skill is available, load it first.
+* Plain text (strings, comments, config, logs): use `rg`. Do not use `grep` when `rg` is available.
+
+## Shell Commands
+
+Do not prefix a command with a `cd` into the working directory when the shell is already there. The working directory persists between calls, so a redundant `cd` only adds noise and can trigger permission prompts. Use absolute paths where a path is needed instead.
 
 ## File Editing
 
