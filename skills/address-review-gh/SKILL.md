@@ -23,26 +23,40 @@ disproved — in an earlier session.
 
 ```bash
 gh pr view --json number,headRefName
-````
+```
 
-### 2. Fetch all inline review comments
+### 2. Fetch all unresolved review threads
 
 ```bash
 PR=$(gh pr view --json number --jq .number)
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-gh api "repos/$REPO/pulls/$PR/comments" \
-  --jq '[.[] | {path: .path, line: .line, body: .body}]'
+gh api graphql --paginate -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" -f query='
+query($owner: String!, $name: String!, $pr: Int!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100, after: $endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          isResolved isOutdated path line originalLine
+          comments(first: 50) { nodes { author { login } body } }
+        }
+      }
+    }
+  }
+}' --jq '.data.repository.pullRequest.reviewThreads.nodes[]
+  | select(.isResolved | not)
+  | {path, line, original_line: .originalLine, outdated: .isOutdated, comments: [.comments.nodes[] | {author: .author.login, body}]}'
 ```
 
 ### 3. Filter and group comments
 
 Based on the languages of the commented files, load the matching `<language>-development` skill if available (e.g. `python-development`, `elixir-development`) before reading or editing code.
 
-Collect all inline comments, ignore comments that are clearly outdated or no longer applicable, then group the remaining comments by file path.
+Resolved threads are already filtered out. An `outdated: true` thread points at code that has since changed, and its `line` may be `null`: locate the code from `original_line` (a line in the commit the comment was made on, not in the current file) and the comment text, then check whether the current code still has the problem instead of skipping it. Ignore threads that no longer apply, then group the rest by file path.
 
 For each affected file:
 
-* Read the full file
+* If the gmem code tools are listed, `code_outline` the file and read the symbols enclosing each commented line; otherwise read the full file
 * Inspect the area around each referenced line
 * Apply all relevant fixes in that file together when possible
 

@@ -47,15 +47,13 @@ Ask clarifying questions only when missing context blocks correctness/security c
 Try `origin/main`, then `origin/master`. If neither resolves cleanly (e.g. the repo uses `develop` or a release branch), ask the user which base branch the PR targets before computing the diff — comparing against the wrong base produces misleading reviews.
 
 3) Verify the base branch is up to date  
-Ask the user to run:
-- `git fetch origin`
+Run `git fetch origin`. Without repository access, ask the user to run it.
 
 4) Get the diff (committed changes only)  
-Ask the user to share the diff against the confirmed base, e.g.:
-- `git diff origin/main...HEAD` (substitute the real base branch)
+Run the diff against the confirmed base, e.g. `git diff origin/main...HEAD` (substitute the real base branch). Without repository access, ask the user to share it.
 
 5) Ignore unstaged/uncommitted files  
-Only review committed changes shown by the diff above.
+Only review committed changes shown by the diff above. The gmem code tools read the working tree, not the commit: review with the PR branch checked out and no local changes (`gh pr checkout <N>`, or a worktree passed as the tools' `root`), or their line ranges will not match the diff. For symbols the PR deletes, read `git show <base>:<path>`.
 
 6) Extract PR information with `gh` CLI (optional, recommended)  
 Ask for one of:
@@ -79,6 +77,11 @@ If repository access isn't available, explicitly list the exact files/commands n
 If the gmem MCP server is connected, start with one `recall` on the component under review. A
 constraint, a prior decision, or a dependency's verified behaviour already recorded there keeps a
 finding from being raised against a premise that was settled in an earlier session.
+
+Locate before reading. If the gmem code tools are listed, `code_outline` each changed file and read
+only the symbols the diff touches, and `find_symbol` the definitions the diff calls but does not
+include. They index definitions only: find callers with `ast-grep` or `rg -w`. The
+`graphmem:graphmem-code-analysis` skill covers which tool fits.
 
 Before writing conclusions, identify:
 - touched modules (routes/views/controllers, services/contexts, schemas/models, settings/config, background jobs, middleware)
@@ -141,4 +144,4 @@ Rules:
 
 Be direct but kind. Prefer "Here's a safer approach" over "This is wrong".  
 If you suspect a bug but lack context, state the assumption and request the missing info.  
-Focus on impact over nitpicks. For dead-code removals in particular, explain *why* the code is believed unreachable and ask before recommending deletion, since hidden call paths (metaprogramming, behaviours/interfaces, config, reflection) are easy to miss.
+Focus on impact over nitpicks. For dead-code removals in particular, explain *why* the code is believed unreachable and ask before recommending deletion, since hidden call paths (metaprogramming, behaviours/interfaces, config, reflection) are easy to miss. Never conclude code is unreachable from `find_symbol`: it does not see call sites.
