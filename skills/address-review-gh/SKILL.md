@@ -50,7 +50,7 @@ query($owner: String!, $name: String!, $pr: Int!, $endCursor: String) {
 
 ### 3. Filter and group comments
 
-Based on the languages of the commented files, load the matching `<language>-development` skill if available (e.g. `python-development`, `elixir-development`) before reading or editing code.
+Based on the languages of the commented files, load the matching `<language>-development` skill if available (e.g. `python-development`, `elixir-development`) before reading or editing code. When the gmem code tools are listed, also load `graphmem:graphmem-code-analysis`.
 
 Resolved threads are already filtered out. An `outdated: true` thread points at code that has since changed, and its `line` may be `null`: locate the code from `original_line` (a line in the commit the comment was made on, not in the current file) and the comment text, then check whether the current code still has the problem instead of skipping it. Ignore threads that no longer apply, then group the rest by file path.
 

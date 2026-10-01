@@ -1,6 +1,6 @@
 ---
 name: re-request-review
-description: After pushing fixes for addressed PR review comments, reply to each reviewer thread with a minimal one-line acknowledgement and re-request review from the reviewers whose latest verdict is still changes-requested, skipping anyone who has since approved. Use once fixes for review comments are already committed and pushed.
+description: After pushing fixes for addressed PR review comments, reply to each reviewer thread with a minimal one-line acknowledgement, resolve the threads whose fix is pushed, and re-request review from the reviewers whose latest verdict is still changes-requested, skipping anyone who has since approved. Use once fixes for review comments are already committed and pushed.
 ---
 
 # Re-request Review
@@ -10,8 +10,8 @@ equivalent manual fixes) has already been committed and pushed.
 
 ## Goal
 
-Close the loop with reviewers: one short reply per addressed comment thread, then ping the
-right people to look again. Do not re-explain the fix — the diff already shows it.
+Close the loop with reviewers: one short reply per addressed comment thread, resolve the
+threads a pushed fix answers, then ping the right people to look again. Do not re-explain the fix — the diff already shows it.
 
 ## Steps
 
@@ -61,7 +61,32 @@ gh api "repos/$REPO/pulls/$PR/comments" -X POST \
   say so in one line too (e.g. `not doing this here, follow-up in DFXXX`) — do not silently
   skip it.
 
-### 4. Re-request review
+### 4. Resolve the threads a pushed fix answers
+
+Resolve every unresolved thread whose reply (yours from step 3, or an earlier one) points at a
+fix that is committed and pushed. Leave open any thread answered with disagreement, a
+follow-up, a question, or anything else the reviewer still has to weigh in on.
+
+Thread ids come from GraphQL; match a thread to its top-level comment by `databaseId`:
+
+```bash
+gh api graphql -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" -f query='
+query($owner: String!, $name: String!, $pr: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100) {
+        nodes { id isResolved comments(first: 1) { nodes { databaseId } } }
+      }
+    }
+  }
+}' --jq '.data.repository.pullRequest.reviewThreads.nodes[]
+  | select(.isResolved | not) | {thread: .id, comment: .comments.nodes[0].databaseId}'
+
+gh api graphql -f id="<thread id>" -f query='
+mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }'
+```
+
+### 5. Re-request review
 
 Find who is *currently* blocking, which is each reviewer's **latest** verdict — not everyone
 who ever requested changes. A reviewer who requested changes and has since approved is done
@@ -88,9 +113,10 @@ gh api "repos/$REPO/pulls/$PR/requested_reviewers" -X POST \
 If the PR shows the reviewer already back in the "requested" state (check
 `gh pr view --json reviewRequests`), this step is already done — skip it.
 
-### 5. Report results
+### 6. Report results
 
-One or two lines: which threads got a reply, which reviewer(s) were re-requested. No essay.
+One or two lines: which threads got a reply, which were resolved, which reviewer(s) were
+re-requested. No essay.
 
 ## Guardrails
 
@@ -98,9 +124,8 @@ One or two lines: which threads got a reply, which reviewer(s) were re-requested
   against the PR's base first.
 - Never bulk-reply the same canned message to every thread — read each comment, each reply is
   specific to what changed for that one.
-- Do not resolve/close threads via the API — replying is enough; resolving is the reviewer's
-  call (GitHub review comment threads don't have a `resolve` API via `gh`, unlike some other
-  hosts).
+- Never resolve a thread whose fix isn't pushed, or one answered with anything other than a
+  fix — that stays open for the reviewer.
 - Do not re-request a reviewer who only left informational comments and never requested
   changes.
 - Do not re-request a reviewer whose latest verdict is `APPROVED`, even if they requested

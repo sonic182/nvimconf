@@ -3,7 +3,7 @@
 
 Pick the tool by what you are looking for:
 
-* Where a symbol is defined, or what a file contains: use the gmem `find_symbol` / `code_outline` tools when they are available, then read only the returned line range instead of the whole file. They index definitions only, never call sites or references.
+* Where a symbol is defined, or what a file contains: use the gmem `find_symbol` / `code_outline` tools when they are available, then read only the returned line range instead of the whole file. They index definitions only, never call sites or references. When they are listed, load the `graphmem:graphmem-code-analysis` skill before the first code lookup of the session.
 * Call sites, usages, and syntax-shaped patterns (function calls, imports, JSX, decorators, AST structure): use `ast-grep`. If an `ast-grep-find` skill is available, load it first.
 * Plain text (strings, comments, config, logs): use `rg`. Do not use `grep` when `rg` is available.
 
