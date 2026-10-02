@@ -80,6 +80,15 @@ Prefer a small number of high-value tests covering important paths over broad gr
 
 Do not introduce a new testing framework solely for a small change unless explicitly requested or clearly required by the project.
 
+"As few tests as necessary" never overrides the project's own testing rules (`AGENTS.md`), and never means skipping these:
+
+* A public function that writes or deletes is a trust boundary, even when its only caller lives in a later PR of a stack. Validate its input in the function itself and cover each class of invalid input with a test that asserts the error tuple and that existing data is left untouched.
+* When one function reads a shape and another writes the same shape, add a round-trip test: what the read returns can be written back unchanged.
+
+## Stacked PRs
+
+Each PR in a stack is reviewed on its own. It must hold its own contracts: do not defer validation, tests or project conventions (such as where cross-context code lives) to a later PR in the stack.
+
 ## Plan Mode
 
 When producing an implementation plan:

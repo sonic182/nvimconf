@@ -66,10 +66,13 @@ For each comment:
 
 1. Read the enclosing symbol and the code it depends on. Locate definitions in other files with `find_symbol` and read the returned range, not the whole file; find callers and usages with `rg -w` or `ast-grep`
 2. Understand the reviewer's intent, not just the literal wording
-3. Apply the smallest correct change
-4. Follow the project's UI and code conventions (check if any available skills cover the relevant conventions for this project)
-5. Do not refactor unrelated code unless required to address the comment
-6. Preserve existing behavior unless the review explicitly asks for a behavior change
+3. Fix the class of defect, not only the commented line: look for sibling cases of the same problem across the PR's diff (other inputs, other branches, other functions with the same shape) and fix them together
+4. Before writing new logic, check whether the codebase already has a helper that does it (a validator, a query, a workflow) and reuse it
+5. Apply the smallest change that fixes the whole class
+6. Follow the project's UI and code conventions (check if any available skills cover the relevant conventions for this project)
+7. Do not refactor unrelated code unless required to address the comment
+8. Preserve existing behavior unless the review explicitly asks for a behavior change
+9. Add a regression test for each fixed case that fails without the fix
 
 ### 5. Validate changes
 
@@ -78,6 +81,7 @@ After editing:
 * Re-read the updated sections
 * Check for consistency with nearby code
 * Ensure imports, aliases, and component usage still make sense
+* Check the fix against the PR's other contracts: a new validation must still accept what the PR's own read paths return, and a stricter rule must not reject data the PR deliberately preserves
 * Run a lightweight project validation step if it is cheap and obvious
 
 ### 6. Report results

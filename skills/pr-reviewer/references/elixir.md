@@ -5,7 +5,7 @@ On-demand reference for `pr-reviewer`. Read this when the PR is primarily Elixir
 - LiveView/component changes:
   - parent LiveView(s) and nested components
   - `.heex` templates, function components, slots usage
-  - where a changed function component is rendered: `find_symbol` with `kind: "component"` (or `"slot"`), when the gmem code tools are listed
+  - where a changed function component is rendered
   - `mount/3`, `handle_params/3`, `apply_action/3`, `handle_event/3`, `handle_info/2`
   - navigation flows: `push_patch` / `push_navigate` / `live_patch`
 - Auth/security:

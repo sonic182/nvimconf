@@ -2,7 +2,7 @@ On-demand reference for `pr-reviewer`. Read this when the PR is primarily Rust.
 
 ### Context-gathering expansions
 
-- Importers of a changed module or item: `find_symbol` with `kind: "import"` (`use` declarations), when the gmem code tools are listed. That bounds the blast radius; find the actual callers with `ast-grep`.
+- Importers of a changed module or item (`use` declarations) bound the blast radius; find the actual callers with `ast-grep`.
 
 - Error handling & boundaries:
   - error types (`thiserror`/`anyhow`/custom enums) and whether `?` propagation preserves enough context to debug a failure (which record/request/id, not just "it failed")
