@@ -11,33 +11,6 @@ Pick the tool by what you are looking for:
 
 Do not prefix a command with a `cd` into the working directory when the shell is already there. The working directory persists between calls, so a redundant `cd` only adds noise and can trigger permission prompts. Use absolute paths where a path is needed instead.
 
-## File Editing
-
-### Mandatory editing rule
-
-Use the dedicated `Edit` tool for file modifications whenever it is available and capable of making the requested change.
-
-This is a hard requirement, not a preference.
-
-Do NOT modify files by generating or executing scripts or shell commands when the `Edit` tool can perform the change.
-
-In particular, do NOT use any of the following to edit files when `Edit` is available:
-
-* `python` or `python3` scripts
-* Node.js scripts
-* Perl or Ruby scripts
-* `sed -i`
-* `awk`
-* shell redirection such as `>`, `>>`, or heredocs
-* shell pipelines that rewrite files
-* ad-hoc scripts created solely to modify files
-
-Use scripting for file modification only when the requested edit genuinely cannot be performed reasonably with the available dedicated editing tools, such as a necessary large-scale generated transformation.
-
-Before falling back to a script or shell-based file modification, explicitly determine that `Edit` is unsuitable for the operation. Convenience, fewer tool calls, or implementation speed are not sufficient reasons to bypass `Edit`.
-
-For ordinary single-file or multi-file code changes, use `Edit`.
-
 ## Subagents
 
 Do NOT create, invoke, delegate to, or otherwise use subagents by default.
