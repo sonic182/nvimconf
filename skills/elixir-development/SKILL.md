@@ -119,6 +119,8 @@ Generate code that should pass `mix format` before formatting:
 * Blank lines between logically distinct functions.
 * Multiline collections use one item per line.
 * Multiline assignments are followed by a blank line before the next expression.
+* Keyword `do:`/`else:` only when the whole expression fits on one line. Once it breaks across
+  lines, write a `do ... else ... end` block — the formatter will not convert it for you.
 * Prefer readable line breaks over dense cleverness.
 
 Good:
@@ -130,6 +132,20 @@ sanitized =
   |> String.downcase()
 
 next = "prefix:" <> sanitized
+
+if Rule.status(campaign) == :active do
+  campaign
+else
+  %{campaign | enabled: true, starts_at: nil, expires_at: nil}
+end
+```
+
+Bad — keyword form wrapped over several lines:
+
+```elixir
+if Rule.status(campaign) == :active,
+  do: campaign,
+  else: %{campaign | enabled: true, starts_at: nil, expires_at: nil}
 ```
 
 ## Naming
