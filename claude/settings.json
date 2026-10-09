@@ -1,0 +1,51 @@
+{
+  "env": {
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "includeGitInstructions": false,
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "haiku",
+  "fallbackModel": [
+    "claude-sonnet-5-5"
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": "/home/sonic182/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "graphmem@graphmem": true
+  },
+  "extraKnownMarketplaces": {
+    "graphmem": {
+      "source": {
+        "source": "github",
+        "repo": "sonic182/graphmem"
+      }
+    }
+  },
+  "feedbackDrafts": "off",
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "medium"
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-haiku-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "advisorModel": "opus",
+  "theme": "dark",
+  "skipAutoPermissionPrompt": true
+}
