@@ -36,3 +36,7 @@ When reviewing tests, flag:
 * Tests that assert implementation details instead of behavior.
 * Shared state that can leak between async tests.
 
+## Write and Delete Boundaries
+
+A public function that writes or deletes is a trust boundary. Validate its input in the function itself, and cover each class of invalid input with a test that asserts the `{:error, _}` result and that existing data is left untouched.
+

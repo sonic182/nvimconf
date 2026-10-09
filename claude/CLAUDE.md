@@ -1,43 +1,15 @@
 
 ## Code Search
 
-Pick the tool by what you are looking for:
-
-* Where a symbol is defined, or what a file contains: use the gmem `find_symbol` / `code_outline` tools when they are available, then read only the returned line range instead of the whole file. They index definitions only, never call sites or references. When they are listed, load the `graphmem:graphmem-code-analysis` skill before the first code lookup of the session.
-* Call sites, usages, and syntax-shaped patterns (function calls, imports, JSX, decorators, AST structure): use `ast-grep`. If an `ast-grep-find` skill is available, load it first.
-* Plain text (strings, comments, config, logs): use `rg`. Do not use `grep` when `rg` is available.
-
-## Shell Commands
-
-Do not prefix a command with a `cd` into the working directory when the shell is already there. The working directory persists between calls, so a redundant `cd` only adds noise and can trigger permission prompts. Use absolute paths where a path is needed instead.
+Use `rg` for plain text (strings, comments, config, logs). Do not use `grep` when `rg` is available.
 
 ## Subagents
 
-Do NOT create, invoke, delegate to, or otherwise use subagents by default.
-
-This is a hard prohibition.
-
-Use a subagent only when one of the following explicitly instructs you to do so:
-
-1. The user explicitly asks you to use a subagent or agents.
-2. An active skill explicitly requires or instructs the use of a subagent.
-
-Do not infer permission to use subagents merely because:
-
-* the task is complex,
-* work could be parallelized,
-* multiple files are involved,
-* additional research would be useful,
-* delegation might be faster,
-* the model believes a specialist agent would help.
-
-If neither the user nor an active skill explicitly authorizes subagents, perform the work directly yourself.
+Do NOT use subagents unless the user explicitly asks for one or an active skill requires one.
 
 ## Code Comments
 
-Do not add comments to code changes unless the user explicitly requests comments.
-
-Do not add explanatory comments merely because code is complex or newly introduced.
+Do not add comments to code changes unless the user explicitly requests them, even when the code is complex or new.
 
 ## Writing Tests
 
@@ -53,10 +25,7 @@ Prefer a small number of high-value tests covering important paths over broad gr
 
 Do not introduce a new testing framework solely for a small change unless explicitly requested or clearly required by the project.
 
-"As few tests as necessary" never overrides the project's own testing rules (`AGENTS.md`), and never means skipping these:
-
-* A public function that writes or deletes is a trust boundary, even when its only caller lives in a later PR of a stack. Validate its input in the function itself and cover each class of invalid input with a test that asserts the error tuple and that existing data is left untouched.
-* When one function reads a shape and another writes the same shape, add a round-trip test: what the read returns can be written back unchanged.
+"As few tests as necessary" never overrides the project's own testing rules (`AGENTS.md`), and never means skipping this: when one function reads a shape and another writes the same shape, add a round-trip test, so what the read returns can be written back unchanged.
 
 ## Stacked PRs
 
