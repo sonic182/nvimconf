@@ -1,60 +1,89 @@
 ---
 name: dev-workflow
-description: Run the PR loop for a change from branch to merge. Build the step on its own branch and PR, review it with pr-reviewer-new in a context-free subagent, report the findings, apply the agreed fixes, wait for green CI, and merge with merge commits; stacked PRs merge one at a time. An evaluation round can follow. Use when the user asks to develop, review, fix, and merge a PR or a stack of PRs, or to "do the usual flow". It does not review code itself (use pr-reviewer-new) and does not answer human GitHub review comments (use address-review-gh).
+description: Run the pull-request loop for a code change in any repository and language, from branch to merge. Build the change on its own branch, open a PR or merge request, get an independent review, fix the findings, repeat until only minor issues remain, wait for green CI, and merge; stacked PRs merge one at a time. Use when the user asks to develop, review, fix and merge a change or a stack of changes, or to "do the usual flow". It does not review code itself and does not answer human review comments.
 ---
 
 # Development workflow
 
-One loop per change: **build → PR → review → decide → fix → CI → merge**, and an **evaluation** when the project has one. Reply in the user's language, in simple words. Report each step in a line or two; do not narrate.
+One loop per change: **build → PR → review → fix → CI → merge**. Report each
+step to the user in a line or two, in their language.
 
-## 1. Build the step
+Project rules win. Before the first step, read the repository's agent and
+contributor instructions (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, a
+project dev-workflow skill) and its CI config. Take the build, test, lint and
+merge commands from there, not from habit.
 
-- Use one branch and one PR per step. In a stack, each PR is reviewed on its own. It must hold its own contracts (validation, tests, docs, project conventions); never defer them to a later PR.
-- Follow the project's `AGENTS.md`/`CLAUDE.md` for tests, docs and changelog.
-- On a shared machine, run every build, test or program inside its own memory-capped scope: `systemd-run --user --scope -q -p MemoryMax=2G -p MemorySwapMax=0 -- <command>`. Without it, one out-of-memory kill stops the whole session scope, with every agent in it. Put the same rule in every subagent prompt.
-- Subagents run tests in the foreground and never wait with `pgrep -f <command>` loops: CI runners on the same host run the same commands, so such a loop never ends. Before finishing, a subagent checks that it left no background process.
-- Locally, run only the tests the change touches. Let CI run the full suite, unless the user asks for a local full run.
-- Commit messages: a summary line, then short bullets. Never add attribution lines to commits or PR bodies.
-- Open the PR with `gh pr create --base <base> --body-file <file>`. The body says what changed, why, and how it was checked.
+## 1. Build
 
-## 2. Review with a context-free subagent
+- One branch and one PR per change. In a stack, each PR holds its own
+  contracts (validation, tests, docs, changelog); never defer them to a later
+  PR.
+- Prefer a separate worktree per branch (`git worktree add ../<repo>-<topic>
+  -b <branch> origin/<base>`), so parallel work never touches the user's
+  checkout.
+- Run locally only the checks the change touches; let CI run the full suite
+  unless the user asks otherwise.
+- A behavior fix gets a test that fails without it. Prefer few high-value
+  tests over many small ones.
+- Commit messages: a summary line, then short bullets. Never add attribution
+  lines. Never rebase or force-push a branch under review; merge the base in.
+- Open the PR with a body that says what changed, why, and how it was checked
+  (`gh pr create --base <base> --body-file <file>`; on GitLab, `glab mr
+  create`).
 
-After pushing, start a general-purpose subagent with exactly this prompt and nothing more, so the review is not biased by your context:
+## 2. Review
+
+Get a review that is not biased by your own context: a fresh agent, given
+only the PR number and the read-only rules. With the `pr-reviewer-new` skill
+available, use exactly this prompt:
 
 ```text
-Invoke the `pr-reviewer-new` skill (via the Skill tool) and follow it to review GitHub pull request #N. Do not modify local files, switch branches, commit, push, run tests or programs, or post comments on GitHub. Return the full review report as your final answer.
+Invoke the `pr-reviewer-new` skill (via the Skill tool) and follow it to review pull request #N in the repository at <path>. Do not modify local files, switch branches, commit, push, run tests or programs, or post comments. Return the full review report as your final answer.
 ```
 
-- **Which reviewers, by PR kind:**
-  - Trivial changes that cannot affect code, tests or the build (a one-line `.gitattributes` or repo-metadata tweak): no review and no CI wait; merge right away.
-  - Docs-only or small PRs: only this peer review.
-  - Large or risky code (a VM, a loader for untrusted input, security-sensitive code): run sequentially.
-    1. First, in parallel, two critics that may build and run things in the scratchpad but never edit repo files: a **security critic** (memory safety, untrusted input, harnesses, sanitizers, fuzzing) and a **parity/simplicity critic** (differential checks against the reference, speed, KISS, test gaps).
-    2. Wait for both, fix all agreed findings in one batch, then push.
-    3. Then run this peer review on the fixed head, so it checks the final diff and the project rules.
-- For several open PRs, start one subagent per PR.
-- Do not read the subagent's transcript, and do not guess its result. Wait for the completion notice. If the user asks before it arrives, say it is still running.
-- Meanwhile, do other work that does not touch the same files.
+Without it, ask for the same output: findings ranked critical, major and
+minor, each with a location and the concrete failure it causes.
 
-## 3. Report and decide
+Size the review to the risk:
 
-- Summarize the findings, most severe first: critical, major, then minor. Give each one in a line, with the failure it causes. Add CI status.
-- Recommend what to fix and what to skip, with a reason, and ask. Fix right away only when the user already said which findings to fix (for example "fix the major and the minors you consider").
-- If the review says the PR title or body no longer matches the change, treat it as a finding to fix.
+- **Trivial** (metadata, a typo; cannot affect code, tests or the build):
+  no review, merge.
+- **Docs-only or small code:** one review.
+- **Large or risky** (concurrency, a runtime, untrusted input, auth, crypto,
+  data migrations): first two critics in parallel, which may build and run
+  things in a scratch worktree but never edit the branch:
+  - a **security and correctness critic**: untrusted input, races, resource
+    lifetimes, memory safety where the language allows bugs there, and the
+    project's sanitizers or fuzzers when it has them;
+  - a **speed and simplicity critic**: speed A/B against the base when the
+    change can affect speed, duplication, needless complexity, test gaps,
+    docs that overclaim.
+  Fix their findings in one batch, then run the normal review on the fixed
+  head. Point each critic at the project's own review guidance when there is
+  one.
 
-## 4. Fix
+Wait for the reviewer's completion notice; do not read its transcript or
+guess its result. Meanwhile do other work that does not touch the same files.
 
-- Apply the agreed fixes. Each behavior fix gets a test that would fail without it.
-- Probe new diagnostics or behavior by hand once before writing the test.
-- Update the docs the change touches.
-- Run the touched tests, then commit and push to the same PR.
-- Update the PR title and body when the scope grew: `gh pr edit N --title ... --body-file ...`.
-- **Another review pass:** if the review found any critical or major issue, then after the fixes are pushed and CI is green, run the peer review again (same prompt, a new subagent) on the new head. Repeat until a pass finds only minor issues or none. When a pass finds only minors, fix them and go to merge without another review.
+## 3. Fix and repeat
 
-## 5. Wait for CI
+- Do not ask which findings to fix: fix every critical and major, plus the
+  minors worth it, and say which minors you skip and why. Ask only when the
+  user said to for this PR.
+- A review that says the PR title or body no longer matches the change is a
+  finding too.
+- After a pass with any critical or major finding: push the fixes, wait for
+  green CI, and run a new review (a new agent) on the new head.
+- When a pass finds only minors: fix them and go to merge, no new review.
+- **Stop after the third pass.** If the third review still finds a critical
+  or major issue, stop. Report the three passes to the user and decide the
+  approach together before more work on that PR.
 
-- Never chain foreground `sleep`. Run a background until-loop and wait for its completion notice.
-- Run the query once in the foreground first. A loop whose query always prints nothing never ends. If one hangs, stop it and check CI by hand.
+## 4. Wait for CI
+
+Never chain foreground sleeps. Run one background loop on the head commit and
+wait for its notice. Run its query once in the foreground first: a query that
+always prints nothing makes the loop run forever.
 
 ```bash
 sha=$(git rev-parse --short HEAD)
@@ -64,32 +93,36 @@ until s=$(gh run list --branch "$(git branch --show-current)" -L 10 \
       [ -n "$s" ] && ! echo "$s" | grep -Eq "queued|in_progress|pending|waiting"; do sleep 30; done; echo "$s"
 ```
 
-## 6. Merge
+Read a failure in its log before blaming the change; rerun a known flaky job
+once (`gh run rerun ID --failed`) and say so.
 
-Merge only when **all** of these hold:
+## 5. Merge
 
-- the review ran, and the last pass found no critical or major issue;
-- the agreed fixes are pushed;
-- CI is green on the PR's head commit, including a docs-only commit added later;
-- the user asked for the merge, or made it conditional ("merge if review and fixes are done") and the condition holds.
+Merge only when all hold: the last review found no critical or major issue,
+the fixes are pushed, CI is green on the head commit, and the user asked for
+the merge (or made it conditional and the condition holds).
 
-Use merge commits: `gh pr merge N --merge`. Then update the local base (`git checkout <base> && git pull`).
+- Use the project's merge method; without one, a merge commit (`gh pr merge N
+  --merge`).
+- Then check the other open PRs: one that now conflicts gets no CI run, so
+  merge the base into it, push, and wait for CI again.
+- **Stacks** merge bottom-up: merge PR N, retarget N+1 to the base, merge the
+  base into its branch, push, wait for CI, merge, repeat.
+- Clean up: remove the worktree and delete the branch (local and remote) once
+  it is merged and has no unpushed commits.
 
-After every merge, check the other open PRs: `gh pr list --state open --json number,mergeable,mergeStateStatus`. A PR that now conflicts (`CONFLICTING` / `DIRTY`) gets no `pull_request` CI run at all, so merge the base into it right away (plain merge, keep both sides), push, and restart its CI wait. Run CI wait loops from the main checkout, never from a worktree that may be removed.
+## Gotchas
 
-**Stacked PRs** merge bottom-up, one at a time:
-
-1. Merge PR N.
-2. Retarget the next PR: `gh pr edit N+1 --base <base>`.
-3. On the next branch, run `git merge origin/<base>`. Resolve conflicts by keeping both sides' additions (changelog, docs, tests). Run the touched tests.
-4. Push, wait for green CI, then merge it and repeat.
-
-Do not merge the top of the stack, or a PR without a review, unless the user says so.
-
-## 7. Evaluate (when the project has an evaluation)
-
-- Run it after review and fixes, on the pushed head, so the numbers match what gets merged.
-- For an A/B against the base, make a worktree of the base (`git worktree add ../<repo>-base <base>`) and run both arms in parallel. Do not switch the working checkout.
-- Pass secrets only through the runner's option for that (for example `--pass-env NAME`). Never print them.
-- Read failed or timed-out runs in the logs before blaming the change.
-- Document the round in the same PR: the numbers, the comparison with the previous round, and what the noise allows to conclude. Then commit, push, wait for CI and merge per step 6.
+- On a shared machine, cap the memory of builds and tests (on Linux with
+  systemd: `systemd-run --user --scope -q -p MemoryMax=4G -p MemorySwapMax=0
+  -- <cmd>`); one out-of-memory kill can end the whole session. Repeat the
+  rule in every agent prompt.
+- Never wait with `pgrep -f <cmd>` loops: another agent or a self-hosted CI
+  runner may run the same command, and the loop never ends. Agents leave no
+  background process behind.
+- Run CI wait loops from the main checkout, not from a worktree you are about
+  to remove.
+- Branch protection may require checks that run even on docs-only PRs; a merge
+  refused as "not mergeable" usually means checks are still pending.
+- Keep review decisions consistent across passes, or the next pass re-raises
+  findings you already decided to skip; list skipped items in the PR body.
