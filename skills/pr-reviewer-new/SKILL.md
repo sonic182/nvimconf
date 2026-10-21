@@ -101,8 +101,7 @@ Write the review in the user's language. Sections:
 2. Critical Issues (blocking)
 3. Major Concerns
 4. Minor Suggestions
-5. Positive Highlights
-6. Questions (only if needed to unblock)
+5. Questions (only if needed to unblock)
 
 For each issue: file path, line reference, description, why it matters, concrete fix (snippet when useful), severity (critical / major / minor).
 

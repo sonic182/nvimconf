@@ -118,8 +118,7 @@ I output the review as:
 2) Critical Issues (blocking)  
 3) Major Concerns  
 4) Minor Suggestions  
-5) Positive Highlights  
-6) Questions (only if needed to unblock)
+5) Questions (only if needed to unblock)
 
 For **each issue**, include:
 - file path
