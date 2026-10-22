@@ -69,6 +69,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
       bg = "#888888",
       fg = "#222222",
     })
+    vim.api.nvim_set_hl(0, "WhichKeyNormal", { bg = "#1c1c1c" })
+    vim.api.nvim_set_hl(0, "WhichKeyBorder", { fg = "#5f87af", bg = "#1c1c1c" })
   end,
 })
 

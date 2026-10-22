@@ -30,24 +30,28 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
     vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-    vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
-    vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Type definition" }))
+    vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
     vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+    vim.keymap.set("n", "<space>s", vim.lsp.buf.document_symbol, vim.tbl_extend("force", opts, { desc = "Document symbols" }))
+    vim.keymap.set("n", "<space>S", function()
+      vim.lsp.buf.workspace_symbol(vim.fn.expand("<cword>"))
+    end, vim.tbl_extend("force", opts, { desc = "Workspace symbols" }))
 
     if client:supports_method("textDocument/formatting") then
       vim.keymap.set("n", "<space>f", function()
         vim.lsp.buf.format({ async = true, bufnr = bufnr, id = client.id })
-      end, opts)
+      end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
     end
   end,
 })
 
 -- === Diagnostics ===
 vim.diagnostic.config({ virtual_text = { source = true } })
-vim.keymap.set("n", "<space>e", vim.diagnostic.open_float)
+vim.keymap.set("n", "<space>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
-vim.keymap.set("n", "<space>q", vim.diagnostic.setloclist)
+vim.keymap.set("n", "<space>q", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
 
 -- === Server configurations ===
 local servers = {
@@ -109,6 +113,25 @@ local servers = {
   rust_analyzer = {
     filetypes = { "rust" },
     cmd = { "rust-analyzer" },
+    settings = {},
+    before_init = function(params, config)
+      local root = config.root_dir
+      if not root and type(params.rootUri) == "string" then
+        root = vim.uri_to_fname(params.rootUri)
+      end
+      local manifest = root and vim.fs.joinpath(root, "Cargo.toml")
+      if not (manifest and vim.uv.fs_stat(manifest)) then
+        return
+      end
+      for _, line in ipairs(vim.fn.readfile(manifest)) do
+        if line:match("^%s*code%s*=%s*%[") then
+          local settings = { cargo = { features = { "code" } } }
+          config.settings["rust-analyzer"] = settings
+          params.initializationOptions = settings
+          return
+        end
+      end
+    end,
   },
 }
 
