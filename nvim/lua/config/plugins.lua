@@ -30,7 +30,18 @@ return {
     build = function() vim.fn["fzf#install"]() end,
     dependencies = { "junegunn/fzf.vim" }
   },
-  { "folke/which-key.nvim",            config = function() require("which-key").setup {} end },
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      preset = "helix",
+      win = { border = "rounded", title = false },
+      spec = {
+        { "<space>", group = "LSP" },
+        { "<space>r", group = "Rename" },
+      },
+    },
+  },
 
   -- AI & Completions
   {

@@ -2,7 +2,7 @@ On-demand reference for `pr-reviewer`. Read this when the PR is primarily Python
 
 ### Context-gathering expansions
 
-- Importers of a changed module: `find_symbol` with `kind: "import"`, when the gmem code tools are listed. That bounds the blast radius; find the actual callers with `ast-grep`.
+- Importers of a changed module bound the blast radius; find the actual callers with `ast-grep`.
 
 - Web/API changes:
   - route declarations and handler wiring
