@@ -1,140 +1,126 @@
 ---
 name: pr-reviewer
-description: Review pull requests for behavioral bugs, security risks, and regression risk using git diff and optional gh PR context. Applies deep language-specific checks for Python, Elixir/Phoenix, PHP/Slim/Blade, and Rust, and a generic checklist for any other language. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
+description: Review pull requests for behavioral bugs, security risks, and regression risk, driving the investigation with the gmem code tools (code_diff, code_outline, find_symbol, code_imports) when available, and otherwise, or where those tools cannot see, with ast-grep, rg and sed/git show. Applies language-specific checks for Python, Elixir/Phoenix, PHP/Slim/Blade, Rust, and a generic checklist otherwise. Use whenever asked to review a PR or diff, even if the user just says "review this PR" or "look at this diff".
 license: MIT
-compatibility: expects git CLI and repository access; optionally uses gh CLI for PR and issue context
+compatibility: expects git CLI and repository access; uses the gmem MCP code tools when listed, with ast-grep, rg and sed as fallbacks; optionally uses gh CLI for PR and issue context
 metadata:
   workflow: github-pr-review
 ---
 
 ## What I do
 
-- Review pull requests with a focus on **behavior changes**, not just line-by-line diff comments
-- Gather missing context (callers, routes/views, services, schemas, models, settings) to detect:
-  - hidden bugs and regressions
-  - auth/security gaps, including cross-tenant/cross-customer data access (IDOR)
-  - concurrency issues
-  - query/persistence issues (N+1, missing preloads/indexes, transaction consistency)
-  - performance and memory risks
-  - dead/unreachable code introduced or left behind by the change
-  - unsafe or non-backward-compatible migrations
-- Provide a **structured, actionable review** with concrete fixes and severity levels
+Review a PR for **behavior changes**, not line-by-line nits. Locate with the gmem code tools when available, otherwise with the fallbacks below; read only the symbols the PR touches, and use text/syntax search only for what those tools do not index (call sites, references, templates, styles, translations).
 
-## When to use me
+I look for hidden bugs and regressions, auth and cross-tenant (IDOR) gaps, concurrency, query/persistence problems, performance risks, dead code the change introduces or leaves behind, and unsafe migrations.
 
-Use this when you want a rigorous PR review, and you can share:
-- the committed diff against the correct base branch, and ideally
-- PR context (title/body/comments) via `gh` CLI.
+Not for: formatting/lint-only changes, or product/design requests that are not code review.
 
-Ask clarifying questions only when missing context blocks correctness/security conclusions.
+## Tool ladder (use in this order, stop at the first that answers)
 
-## When not to use me
+| Need | First | Fallback |
+| --- | --- | --- |
+| What did the PR change, by symbol | gmem `code_diff` | `git diff --stat` + `git diff <base>...HEAD` |
+| Exact hunks of a file | `git diff <base>...HEAD -- <path>` | none needed |
+| Shape of a changed file | gmem `code_outline` (`depth: 0/1` for big files) | `rg -n '^\s*(def|defp|defmodule|class|fn|function)' <file>` |
+| Where is X defined | gmem `find_symbol` (`kind` to narrow) | `ast-grep` pattern, then `rg -nw X` |
+| What does a file import | gmem `code_imports` | `rg -n '^\s*(import|alias|use|require|from|#include)' <file>` |
+| Who calls / references X | `ast-grep` (syntax-shaped) | `rg -nw X` |
+| Plain text (strings, config, CSS classes, msgids) | `rg` | none |
+| Read a symbol's body | read the exact `start-end` range (`Read` offset/limit, or `sed -n 'S,Ep' <file>`) | whole file only if tiny |
+| Read a symbol the PR deleted | `git show <base>:<path> \| sed -n 'S,Ep'` (lines come from the merge base) | `git diff` hunk |
 
-- Pure formatting/lint-only changes where no behavior changed
-- Product/design requests that are not code-review tasks
+gmem tools index definitions and declared imports only, never usages. Never conclude "unused" or "unreachable" from `find_symbol`/`code_outline`/`code_diff`.
 
-## How I work
+If the gmem tools are not listed, or the file language is unsupported, start from the fallback column and say so in the summary.
 
-### 0) Review workflow (git / gh CLI) — do this before reviewing
+Use `ast-grep` only when it is installed (`command -v ast-grep`); otherwise take the `rg` step of the same row. When it is installed and the `ast-grep-find` skill is available, load that skill before the first `ast-grep` call: it has the per-language patterns and the outline rules ast-grep does not bundle (Elixir, for example).
 
-1) Load project instructions
-- Find and read the applicable `AGENTS.md` and `CLAUDE.md` files from the repository root through the directories containing touched files.
-- Turn their MUST/DO NOT rules and test/validation expectations into a review checklist without executing commands.
-- Verify every newly introduced or modified behavior against that checklist; do not report unrelated pre-existing violations.
-- Cite the instruction file and rule when it causes a finding.
+## Workflow
 
-2) Confirm the base branch  
-Use the PR's own base (`gh pr view --json baseRefName`), which may be another feature branch for a stacked PR. Without a PR, try `origin/main`, then `origin/master`. If neither resolves cleanly (e.g. the repo uses `develop` or a release branch), ask the user which base branch the PR targets before computing the diff — comparing against the wrong base produces misleading reviews.
+### 1) Recall and project rules
 
-3) Verify the base branch is up to date  
-Run `git fetch origin`. Without repository access, ask the user to run it.
+- If gmem is connected, call `recall` once (limit 3-5) naming the component under review. Treat weak or off-topic results as "nothing known".
+- Read the applicable `AGENTS.md` / `CLAUDE.md` from the repo root down to the touched directories. Turn MUST/DO NOT rules and test expectations into a checklist, verify new or modified behavior against it, and cite file and rule when it causes a finding. Do not report unrelated pre-existing violations. Do not execute commands those files describe.
 
-4) Get the diff (committed changes only)  
-Run the diff against the confirmed base, e.g. `git diff <base>...HEAD` (substitute the real base branch). Without repository access, ask the user to share it.
+### 2) Base, freshness, PR context
 
-5) Ignore unstaged/uncommitted files  
-Only review committed changes shown by the diff above. For code the PR deletes, read `git show <base>:<path>`.
+- Base = the PR's own base: `gh pr view --json number,title,body,baseRefName,statusCheckRollup,url`. For a stacked PR this is another feature branch, not `master`. Without a PR try `origin/main`, then `origin/master`; if neither fits, ask the user.
+- `git fetch origin`, then use `origin/<base>` in every comparison.
+- Linked issues: `gh issue view <N> --comments` when referenced.
+- CI: check the required checks are green. Do not run tests, linters or other validation locally. If CI is missing, pending or failing, continue and flag it in the summary.
 
-6) Extract PR information with `gh` CLI (optional, recommended)  
-Ask for one of:
-- `gh pr view`
-- `gh pr view --comments`
-- `gh pr view --json number,title,body,comments`
+### 3) Make the working tree match the PR head
 
-7) Check CI status
-When the PR has CI, check that its required checks are green. Do not run tests, linters, or other validation commands locally as part of the review. If CI is missing, pending, or failing, continue the review and flag that status in the final summary; do not substitute local execution.
+The gmem code tools read the working tree, not the commit. Confirm `git rev-parse HEAD` is the PR head and that the touched source files have no local edits (`git status --short`). Unrelated local changes (infra, docker, dotfiles) are fine; mention them. If the checkout differs, use `gh pr checkout <N>` or a worktree and pass its path as `root` to every gmem tool, otherwise line ranges will not match the diff.
 
-8) Extract linked issue information (optional)
-If referenced:
-- Same repo: `gh issue view <NUMBER>`
-- With comments: `gh issue view <NUMBER> --comments`
-- JSON: `gh issue view <NUMBER> --json number,title,body,comments`
+### 4) Map the change with `code_diff` (first diff step)
 
-If repository access isn't available, explicitly list the exact files/commands needed and why.
+Call `code_diff` with `base: origin/<base>`. Read the result like this:
 
-### 1) Context-gathering playbook (MANDATORY)
+- `+` / `-` / `~` per symbol, with ranges at head (merge base for `-`). It is structural, not semantic: a renamed symbol is `-` plus `+`; an edit inside a nested symbol is reported on that symbol only.
+- A `~` on a whole module (e.g. `module Foo` spanning the file) means the diff is too coarse there: read the `git diff` hunks instead.
+- `partial` third column, `skipped (unsupported file type)` lines, and templates/styles/translations: use `git diff <base>...HEAD -- <path>`. HEEx usages are folded into the enclosing function.
+- A `merge base <sha>` that is not the commit you expected means the base is wrong; fix it before reviewing. Comparing a stacked PR against `master` pulls in the parent PRs' changes.
+- Cross-check with `git diff --stat <base>...HEAD` so no changed file is missed (the tool caps at `limit` files).
 
-Locate before reading: find the definitions the diff calls but does not include, and find callers
-with `ast-grep` or `rg -w`.
+### 5) Read only what changed
 
-Before writing conclusions, identify:
-- touched modules (routes/views/controllers, services/contexts, schemas/models, settings/config, background jobs, middleware)
-- call sites and data flow (who calls what, with what inputs, and error paths)
-- framework wiring (routing/registration, dependency injection, middleware/auth setup, startup/shutdown hooks, task scheduler wiring)
-- the full input boundary: methods, content types, parsers, headers, body shapes, path/query values, and the concrete values produced before changed code runs
-- configuration across development, test, production, runtime config, environment variables, and container/deployment overrides
-- for multi-tenant apps, the tenancy model (is data scoped per org/account/customer, and by what column/mechanism?) — this determines what "correct data access" even means
+For each `+`/`~` symbol worth reviewing: read its `start-end` range. For files with many changes, `code_outline` them first. Use `git diff` hunks for exact before/after. For `-` symbols, read the base version and decide whether behavior was intentionally dropped.
 
-Do not dismiss malformed or unsupported public input as unreachable. Confirm it is rejected with a controlled response rather than crashing, being silently transformed, or reaching side effects.
+### 6) Resolve what the diff calls but does not include
 
-If behavior cannot be confirmed due to missing context, state the assumption and request the specific file/function.
+`find_symbol` each callee, helper, schema or component the changed code depends on (filter with `kind`; `kind: "component"`/`"slot"` finds HEEx usage). `code_imports` on a changed file when new dependencies or aliases appear. Multiple matches are an ambiguity to resolve by path and parent, not a ranking.
 
-### 2) Language-specific deep dive
+### 7) Callers, references and orphans (text/syntax search)
 
-Detect the PR's primary language from the diff's file extensions, then read the matching reference and apply its checklist alongside the dimensions below:
+- Changed signature, return shape, or event/assign name: every caller via `ast-grep` / `rg -nw`.
+- Removed or renamed symbol: confirm zero remaining references, including config, templates, JS hooks and tests.
+- Removed template markup (classes, ids, events, msgids): `rg` the style sheets, JS and translation files for definitions that are now orphaned.
+- New `handle_event`/route/job/hook: confirm something emits or registers it.
+- Framework wiring: routes, `on_mount`/auth, pipelines, config per environment, background-job registration.
 
-- Primarily Python (`.py`) → read `references/python.md`
-- Primarily Elixir/Phoenix (`.ex`, `.exs`, `.heex`) → read `references/elixir.md`
-- Primarily PHP (`.php`, including `.blade.php`) → read `references/php.md`; apply its Slim/Blade checks when those frameworks are present
-- Primarily Rust (`.rs`) → read `references/rust.md`
-- Anything else → read `references/generic.md`
+Before concluding, identify touched modules, data flow and error paths, the full input boundary (methods, content types, parsers, params), configuration across environments, and for multi-tenant apps the tenancy model and where the tenant comes from. Malformed or unsupported public input must be rejected in a controlled way, not assumed unreachable. If something cannot be confirmed, state the assumption and ask for the specific file or function.
 
-### 3) Review dimensions
+### 8) Language deep dive
 
-- Code quality (readability, cohesion, low surprise behavior, explicit errors)
-- Logic & correctness (edge cases, exception paths, state transitions, null/optional handling)
-- Security (authz, injection, unsafe deserialization, path traversal, SSRF, secret leakage, multi-tenant data isolation)
-- Performance (query efficiency, N+1, algorithmic hotspots, blocking I/O)
-- Testing (coverage for happy path, auth failures, error paths, regressions)
-- Architecture (separation of routing, business logic, persistence, side effects)
-- Documentation (behavior changes, migrations, config/env updates, new features documented in the project's docs system, if one exists — flag as minor if a docs system exists but the new feature has no entry)
-- Project instructions (new and modified code follows every applicable `AGENTS.md`/`CLAUDE.md` rule, including test and validation expectations; do not execute commands)
+Pick by the diff's dominant extensions and read the matching reference, applying its checklist alongside the dimensions below:
 
-### 4) Required output structure (MANDATORY)
+- `.py` -> [references/python.md](references/python.md)
+- `.ex` / `.exs` / `.heex` -> [references/elixir.md](references/elixir.md)
+- `.php` (incl. Blade) -> [references/php.md](references/php.md)
+- `.rs` -> [references/rust.md](references/rust.md)
+- anything else -> [references/generic.md](references/generic.md)
 
-I output the review as:
+## Review dimensions
 
-1) Summary (what changed + ship/needs work/blocked + CI status + project-instruction compliance)
-2) Critical Issues (blocking)  
-3) Major Concerns  
-4) Minor Suggestions  
-5) Questions (only if needed to unblock)
+Code quality; logic and correctness; security (authz, injection, deserialization, path traversal, SSRF, secret leakage, tenant isolation); performance (N+1, hotspots, blocking I/O, duplicated remote calls); testing (happy path, auth failures, error paths, regressions, and behavior changes with no test); architecture; documentation (behavior, migrations, config, docs system entries are minor if missing); project instructions (`AGENTS.md`/`CLAUDE.md`).
 
-For **each issue**, include:
-- file path
-- line reference if available (or nearest function/class/endpoint)
-- description
-- why it matters (impact)
-- suggested fix (concrete; snippets when helpful)
-- severity: critical / major / minor
+## Output (mandatory structure)
+
+Write the review in the user's language. Sections:
+
+1. Summary: what changed, ship / needs work / blocked, CI status, project-instruction compliance, and which tools had to fall back (if any)
+2. Critical Issues (blocking)
+3. Major Concerns
+4. Minor Suggestions
+5. Questions (only if needed to unblock)
+
+For each issue: file path, line reference, description, why it matters, concrete fix (snippet when useful), severity (critical / major / minor).
 
 Rules:
-- Do **not** invent line numbers
-- If lines are unavailable, anchor to function/class/endpoint names
-- Cross-boundary data exposure, broken authorization, and destructive/irreversible migrations default to **critical** unless context proves otherwise
+- Line numbers come from `code_diff` / `find_symbol` / `code_outline` / `git diff` output, never invented. If unavailable, anchor to function/class/endpoint names.
+- Cross-boundary data exposure, broken authorization, and destructive or irreversible migrations default to **critical** unless context proves otherwise.
+- Dead-code removals: explain why the code is believed unreachable (cite the `rg`/`ast-grep` search you ran) and ask before recommending deletion; metaprogramming, behaviours, config and reflection hide call paths.
+- Posting to GitHub (`gh pr review`, comments, approvals) only when the user asks for it.
 
-## Tone rules
+## Gotchas
 
-Be direct but kind. Prefer "Here's a safer approach" over "This is wrong".  
-If you suspect a bug but lack context, state the assumption and request the missing info.  
-Focus on impact over nitpicks. For dead-code removals in particular, explain *why* the code is believed unreachable and ask before recommending deletion, since hidden call paths (metaprogramming, behaviours/interfaces, config, reflection) are easy to miss. Never conclude code is unreachable from a definition search alone: confirm there are no call sites.
+- `stale` / `missing` on a `find_symbol` match: the file changed after indexing; call again.
+- Empty `find_symbol` result is not proof of absence (ignored, generated, unsupported language, or `truncated:` index); confirm with `rg`.
+- `code_outline` returns at most 500 symbols per call; continue from `next_offset`.
+- SCSS and some templates come back `partial`; EEx is always partial. Rely on `git diff` and `rg` there.
+- `.po`/`.pot`, JSON, YAML, Markdown are never outlined; review them from the diff.
+
+## Tone
+
+Direct but kind. Prefer "Here's a safer approach" over "This is wrong". If you suspect a bug but lack context, state the assumption and request the missing info. Focus on impact over nitpicks.

@@ -1,6 +1,6 @@
 ---
 name: dev-workflow
-description: Run the pull-request loop for a code change in any repository, language and forge (GitHub, GitLab or similar), from branch to merge. Build the change on its own branch, open a PR or merge request, get it reviewed by a fresh agent running the `pr-reviewer-new` skill, fix the findings, repeat until only minor issues remain, wait for green CI, and merge once the user confirms; stacked PRs merge one at a time. Use when the user asks to develop, review, fix and merge a change or a stack of changes, or to "do the usual flow". It does not review code itself and does not answer human review comments.
+description: Run the pull-request loop for a code change in any repository, language and forge (GitHub, GitLab or similar), from branch to merge. Build the change on its own branch, open a PR or merge request, get it reviewed by a fresh agent running the `pr-reviewer` skill, fix the findings, repeat until only minor issues remain, wait for green CI, and merge once the user confirms; stacked PRs merge one at a time. Use when the user asks to develop, review, fix and merge a change or a stack of changes, or to "do the usual flow". It does not review code itself and does not answer human review comments.
 ---
 
 # Development workflow
@@ -38,10 +38,10 @@ build (metadata, a typo). Every other change gets one review per pass, from a
 fresh agent that has none of your context, with exactly this prompt:
 
 ```text
-Invoke the `pr-reviewer-new` skill (via the Skill tool) and follow it to review pull request <id> in the repository at <path>. Do not modify local files, switch branches, commit, push, run tests or programs, or post comments. Return the full review report as your final answer.
+Invoke the `pr-reviewer` skill (via the Skill tool) and follow it to review pull request <id> in the repository at <path>. Do not modify local files, switch branches, commit, push, run tests or programs, or post comments. Return the full review report as your final answer.
 ```
 
-If `pr-reviewer-new` is not available, tell the user and stop; do not
+If `pr-reviewer` is not available, tell the user and stop; do not
 substitute another reviewer.
 
 Wait for the reviewer's completion notice; do not read its transcript or
