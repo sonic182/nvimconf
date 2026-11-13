@@ -1,0 +1,248 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOME_DIR="${CODEX_AGENT_HOME:-$HOME/.cache/codex-agent}"
+DEFAULT_MODEL="${CODEX_AGENT_MODEL:-gpt-6.1-terra}"
+
+die() { echo "codex-agent: $*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+Usage:
+  codex-agent start <name> [--repo DIR] [--base REF] [--effort medium|high]
+                           [--model M] [--no-worktree] (--prompt-file F | -)
+  codex-agent resume <name> [message | -]
+  codex-agent say <name> <message | ->     queue a message the agent reads after its next tool call
+  codex-agent pause <name>                 interrupt the run, keep worktree and session
+  codex-agent stop <name>                  kill the run, remove worktree, branch, session and state
+  codex-agent status [name]
+  codex-agent log <name> [lines]
+
+start and resume run in the foreground until the turn ends: launch them in the
+background and wait for their exit. The exit prints the state and the agent's
+last message.
+EOF
+}
+
+dir_of() { echo "$HOME_DIR/$1"; }
+
+need_agent() {
+  [[ -n "${1:-}" ]] || die "missing agent name"
+  [[ -d "$(dir_of "$1")" ]] || die "no agent named $1 (see: codex-agent status)"
+}
+
+meta() {
+  local value; value="$(sed -n "s/^$2=//p" "$(dir_of "$1")/meta" | tail -1)"
+  if [[ -z "$value" && "$2" == session && -f "$(dir_of "$1")/log" ]]; then
+    value="$(sed -n 's/^session id: //p' "$(dir_of "$1")/log" | head -1)"
+  fi
+  echo "$value"
+}
+set_meta() { echo "$2=$3" >> "$(dir_of "$1")/meta"; }
+
+alive() {
+  local pidf; pidf="$(dir_of "$1")/pid"
+  [[ -f "$pidf" ]] && kill -0 "$(cat "$pidf")" 2>/dev/null
+}
+
+state_of() {
+  local d; d="$(dir_of "$1")"
+  if alive "$1"; then echo running
+  elif [[ -f "$d/paused" ]]; then echo paused
+  elif [[ ! -f "$d/exit" ]]; then echo new
+  elif [[ "$(cat "$d/exit")" != 0 ]]; then echo failed
+  elif head -c 9 "$d/last.md" 2>/dev/null | grep -q '^QUESTION:'; then echo question
+  else echo done
+  fi
+}
+
+preamble() {
+  local name="$1" d workdir branch
+  d="$(dir_of "$name")"; workdir="$(meta "$name" workdir)"; branch="$(meta "$name" branch)"
+  cat <<EOF
+You are a delegated coding agent. A coordinator (another AI agent working with the user) gave you this task and reads your final message.
+
+Rules:
+- Supervisor channel: after every tool call, run \`cat $d/inbox.md\`. If it is not empty, treat its content as a new instruction from the coordinator that overrides earlier ones, then empty it with \`: > $d/inbox.md\`.
+- Work only inside $workdir${branch:+ on branch $branch}. Commit your changes there with Conventional Commits messages. Never push, never switch or delete branches, never touch other directories.
+- If you need a decision you cannot make from the task and the code, stop and make your final message start with \`QUESTION:\`, followed by the question and the options you see.
+- Otherwise end with a final message that starts with \`DONE:\` and says what changed, the commits, the checks you ran and what you could not verify.
+
+Task:
+EOF
+}
+
+finish() {
+  local name="$1" rc="$2" d; d="$(dir_of "$name")"
+  echo "$rc" > "$d/exit"
+  rm -f "$d/pid"
+  if grep -q '^turn interrupted' "$d/log" 2>/dev/null && [[ -f "$d/pause-requested" ]]; then
+    touch "$d/paused"
+  fi
+  rm -f "$d/pause-requested"
+  echo "agent: $name"
+  echo "state: $(state_of "$name")"
+  echo "workdir: $(meta "$name" workdir)"
+  [[ -n "$(meta "$name" branch)" ]] && echo "branch: $(meta "$name" branch)"
+  echo "session: $(meta "$name" session)"
+  echo "--- last message"
+  cat "$d/last.md" 2>/dev/null || echo "(none)"
+}
+
+run_codex() {
+  local name="$1"; shift
+  local d; d="$(dir_of "$name")"
+  rm -f "$d/exit" "$d/paused" "$d/last.md"
+  : > "$d/inbox.md"
+  echo "===== $(date -Is) $*" >> "$d/log.all"
+  setsid "$@" < /dev/null > "$d/log" 2>&1 &
+  local pid=$!
+  echo "$pid" > "$d/pid"
+  local rc=0
+  wait "$pid" || rc=$?
+  cat "$d/log" >> "$d/log.all"
+  if [[ -z "$(meta "$name" session)" ]]; then
+    local sid; sid="$(sed -n 's/^session id: //p' "$d/log" | head -1)"
+    [[ -n "$sid" ]] && set_meta "$name" session "$sid"
+  fi
+  finish "$name" "$rc"
+}
+
+read_text() {
+  if [[ "${1:-}" == "-" ]]; then cat; elif [[ -n "${1:-}" ]]; then printf '%s\n' "$1"; else die "missing text"; fi
+}
+
+cmd_start() {
+  local name="${1:-}"; shift || true
+  [[ "$name" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "name must be lowercase letters, digits and hyphens"
+  local repo="$PWD" base="HEAD" effort="medium" model="$DEFAULT_MODEL" worktree=1 prompt=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --repo) repo="$2"; shift 2 ;;
+      --base) base="$2"; shift 2 ;;
+      --effort) effort="$2"; shift 2 ;;
+      --model) model="$2"; shift 2 ;;
+      --no-worktree) worktree=0; shift ;;
+      --prompt-file) prompt="$(cat "$2")"; shift 2 ;;
+      -) prompt="$(cat)"; shift ;;
+      *) die "unknown option $1" ;;
+    esac
+  done
+  [[ -n "$prompt" ]] || die "missing prompt: pass --prompt-file F or - with the prompt on stdin"
+  [[ "$effort" =~ ^(low|medium|high|xhigh)$ ]] || die "effort must be low, medium, high or xhigh"
+  local d; d="$(dir_of "$name")"
+  [[ -e "$d" ]] && die "agent $name already exists; resume it or stop it first"
+  repo="$(cd "$repo" && pwd)"
+  mkdir -p "$d"
+  local workdir="$repo" branch=""
+  if [[ $worktree == 1 ]]; then
+    git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "$repo is not a git repository (use --no-worktree)"
+    branch="codex/$name"
+    workdir="$d/worktree"
+    git -C "$repo" worktree add -q -b "$branch" "$workdir" "$base" || { rm -rf "$d"; die "could not create the worktree"; }
+  fi
+  { echo "repo=$repo"; echo "workdir=$workdir"; echo "branch=$branch"
+    echo "model=$model"; echo "effort=$effort"; echo "session="; } > "$d/meta"
+  { preamble "$name"; echo "$prompt"; } > "$d/prompt.md"
+  local skip=(); git -C "$workdir" rev-parse --git-dir >/dev/null 2>&1 || skip=(--skip-git-repo-check)
+  run_codex "$name" codex exec -m "$model" -c "model_reasoning_effort=\"$effort\"" \
+    --dangerously-bypass-approvals-and-sandbox "${skip[@]}" -C "$workdir" \
+    -o "$d/last.md" "$(cat "$d/prompt.md")"
+}
+
+cmd_resume() {
+  local name="${1:-}"; need_agent "$name"; shift
+  alive "$name" && die "$name is running; pause it first or use say"
+  local d sid msg; d="$(dir_of "$name")"; sid="$(meta "$name" session)"
+  [[ -n "$sid" ]] || die "$name has no session id yet"
+  if [[ $# -gt 0 ]]; then msg="$(read_text "$1")"
+  else msg="You were paused. Continue the task where you left off, without repeating work that already finished."; fi
+  msg="$msg
+
+(Keep the rules of your first message: read $d/inbox.md after every tool call, work only in your workdir, never push, and end with QUESTION: or DONE:.)"
+  local workdir; workdir="$(meta "$name" workdir)"
+  local skip=(); git -C "$workdir" rev-parse --git-dir >/dev/null 2>&1 || skip=(--skip-git-repo-check)
+  cd "$workdir"
+  run_codex "$name" codex exec resume "$sid" -m "$(meta "$name" model)" \
+    -c "model_reasoning_effort=\"$(meta "$name" effort)\"" \
+    --dangerously-bypass-approvals-and-sandbox "${skip[@]}" -o "$d/last.md" "$msg"
+}
+
+cmd_say() {
+  local name="${1:-}"; need_agent "$name"; shift
+  alive "$name" || die "$name is not running; use resume <name> <message>"
+  read_text "${1:-}" >> "$(dir_of "$name")/inbox.md"
+  echo "queued for $name; it reads the inbox after its next tool call"
+}
+
+cmd_pause() {
+  local name="${1:-}"; need_agent "$name"
+  alive "$name" || die "$name is not running"
+  local d pid; d="$(dir_of "$name")"; pid="$(cat "$d/pid")"
+  touch "$d/pause-requested"
+  kill -INT -- "-$pid" 2>/dev/null || kill -INT "$pid"
+  for _ in $(seq 1 20); do kill -0 "$pid" 2>/dev/null || break; sleep 0.5; done
+  kill -0 "$pid" 2>/dev/null && { kill -TERM -- "-$pid" 2>/dev/null || true; }
+  echo "paused $name; resume it with: codex-agent resume $name [message]"
+}
+
+cmd_stop() {
+  local name="${1:-}"; need_agent "$name"
+  local d; d="$(dir_of "$name")"
+  if alive "$name"; then
+    local pid; pid="$(cat "$d/pid")"
+    kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+    sleep 1; kill -KILL -- "-$pid" 2>/dev/null || true
+  fi
+  local repo branch sid
+  repo="$(meta "$name" repo)"; branch="$(meta "$name" branch)"; sid="$(meta "$name" session)"
+  if [[ -n "$branch" ]]; then
+    git -C "$repo" worktree remove --force "$d/worktree" 2>/dev/null || true
+    git -C "$repo" worktree prune
+    git -C "$repo" branch -D "$branch" >/dev/null 2>&1 || true
+  fi
+  [[ -n "$sid" ]] && codex delete "$sid" >/dev/null 2>&1 || true
+  rm -rf "$d"
+  echo "stopped and removed $name${branch:+ (worktree and branch $branch)}"
+}
+
+cmd_status() {
+  if [[ -n "${1:-}" ]]; then
+    need_agent "$1"
+    local d; d="$(dir_of "$1")"
+    echo "agent: $1"; echo "state: $(state_of "$1")"
+    for key in repo workdir branch model effort session; do
+      echo "$key: $(meta "$1" "$key")"
+    done
+    echo "--- last message"; cat "$d/last.md" 2>/dev/null || echo "(none yet)"
+    return
+  fi
+  [[ -d "$HOME_DIR" ]] || { echo "no agents"; return; }
+  local any=0
+  for d in "$HOME_DIR"/*/; do
+    [[ -f "$d/meta" ]] || continue
+    any=1
+    local n; n="$(basename "$d")"
+    printf '%s\t%s\t%s\t%s\n' "$n" "$(state_of "$n")" "$(meta "$n" branch)" "$(meta "$n" workdir)"
+  done
+  [[ $any == 1 ]] || echo "no agents"
+}
+
+cmd_log() {
+  local name="${1:-}"; need_agent "$name"
+  tail -n "${2:-40}" "$(dir_of "$name")/log"
+}
+
+command -v codex >/dev/null || die "codex CLI not found on PATH"
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  start) cmd_start "$@" ;;
+  resume) cmd_resume "$@" ;;
+  say) cmd_say "$@" ;;
+  pause) cmd_pause "$@" ;;
+  stop) cmd_stop "$@" ;;
+  status) cmd_status "$@" ;;
+  log) cmd_log "$@" ;;
+  ""|-h|--help|help) usage ;;
+  *) die "unknown command $cmd (see --help)" ;;
+esac
